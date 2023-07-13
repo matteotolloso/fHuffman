@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.rmd": "markdown",
+        "*.py": "python",
+        "chrono": "cpp",
+        "algorithm": "cpp"
+    }
+}
