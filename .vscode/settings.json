@@ -3,6 +3,13 @@
         "*.rmd": "markdown",
         "*.py": "python",
         "chrono": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "atomic": "cpp",
+        "functional": "cpp",
+        "random": "cpp",
+        "numeric": "cpp",
+        "cmath": "cpp",
+        "regex": "cpp",
+        "valarray": "cpp"
     }
 }

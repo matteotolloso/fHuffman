@@ -1,0 +1,13 @@
+\documentclass[report]{style}
+
+\usepackage{lipsum}
+
+\title{Report Title}
+\author{Author Name}
+\date{\today}
+
+the mmap executon time does not depends on the size of the file. So do $n$ mmap on a file of size $n$ is only useless overhead.
+But can be useful because of the sharing problem i.e. the file can be mapped in a memory slot far from the other threads (since we make only read access probably is not a big problem)
+
+
+
