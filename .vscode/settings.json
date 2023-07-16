@@ -10,6 +10,8 @@
         "numeric": "cpp",
         "cmath": "cpp",
         "regex": "cpp",
-        "valarray": "cpp"
-    }
+        "valarray": "cpp",
+        "ostream": "cpp"
+    },
+    "cmake.sourceDirectory": "/home/matteo/fHuffman/"
 }
