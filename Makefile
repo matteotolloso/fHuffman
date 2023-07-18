@@ -1,7 +1,7 @@
 
 IDIR = -I ./includes
 FFIDIR = -I ./fastflow/
-FLAGS=-std=c++20 -O3 -Wall  -Wpedantic -Wno-unused
+FLAGS= -Wall -Wpedantic -Wno-unused -O3 -I /usr/local/include -std=c++17 
 
 all :  huff_seq huff_ff
 

@@ -10,9 +10,10 @@
 #define NUM_CHARS 128
 
 std::string read_file(std::string filename){
-    std::ifstream infile(filename);
-    std::string contents((std::istreambuf_iterator<char>(infile)), std::istreambuf_iterator<char>());
-    return contents;
+    std::ifstream file(filename);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
 }
 
 /*

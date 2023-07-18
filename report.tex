@@ -1,13 +1,103 @@
-\documentclass[report]{style}
+\documentclass[12pt, letterpaper]{article}  % it must be at least 11 pt or more if you like (here we used 12 for clarity of the demo), and change article with report
+\usepackage[letterpaper, top=3.71cm, bottom=3.20cm, left=2.86cm, right=2.86cm]{geometry}
+%top = 2.44 (header in doc) + 1.27
+% bottom 1.42 (footer in doc) + 1.78
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{placeins}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\usepackage{hyperref}
+\usepackage{verbatim}
+% Square around link (to decide)
+\hypersetup{hidelinks}
+% Square around link (to decide)
+\usepackage{color}
+\usepackage{tabularx}
+\usepackage{threeparttable}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{longtable}
+\usepackage{subcaption} % for subfigure environments
+\usepackage{booktabs}
+\usepackage{nameref}
 
-\usepackage{lipsum}
 
-\title{Report Title}
-\author{Author Name}
-\date{\today}
+\title{\vspace{2cm}\textbf{Huffman code} \\
+        \bigskip
+        \Large{
+            \medskip
+            University of Pisa \\
+            \medskip
+            Parallel and Distributed Systems: Paradigms and Models \\
+            \medskip
+            Project Report\\
+            \medskip
+        }
+}
+\medskip
 
-the mmap executon time does not depends on the size of the file. So do $n$ mmap on a file of size $n$ is only useless overhead.
-But can be useful because of the sharing problem i.e. the file can be mapped in a memory slot far from the other threads (since we make only read access probably is not a big problem)
+\author{
+  {Matteo Tolloso}\\
+  \texttt{ \scriptsize{m.tolloso@studenti.unipi.it}}\\
+  \texttt{\scriptsize{Roll number: 598067}} \\
+  %\scriptsize{Artificial Intelligence curriculum}
+}
+
+\begin{document}
+\nocite{*}
+\date{September 1, 2023}
+\maketitle
+
+%/////////////////////////////////////
+\newpage
+
+\section{Introduction}
+The Huffman code is an efficient lossless compression code based on the probability of each character.
+
+To build the optimal code for a specific text we have to:
+\begin{enumerate}
+    \item count the number of occurences of each character in the text;
+    \item build the binary tree that represents the code;
+    \item encode the file.
+\end{enumerate}
+
+\section{Theoretical analysis}
+
+We are facing a problem that can be divided in three stages. In particular it is a \textit{data parallel} task, 
+since we have all input available at the beginning of the computation.
+
+\subsection{Counting the number of occurences}
+As stated above, the first stage is a counting one. This is clearly a \textit{map-reduce} operation.
+
+\paragraph*{Map}
+The \textit{map} part can be execute in parallel dividing the file into chunks, the workers count the occurences of each character
+in a chunk of the file. The asymptotic sequential complexity of this part is $\theta(m)$ where $m$ is the number of characters in the file.
+
+\paragraph*{Reduce}
+The \textit{reduce} operation can again be executed in parallel, this 
+time each reducer takes a subset of the alphabet and sums the occurences of each character in that subset. The sequential
+asymptotic complexity is constant since depends only of he number of different character. However, from a parallel point of view, this operation 
+has a complexity that depeds on the number of chunks the file was divided into in the \textit{map} phase (that can be different from the number of
+mapper workers), because the reducers have to sum the assigned characters along all the chunks. So if $c$ is the number of chunks and $A$ the number
+of different symbols (128), the complexity of the \textit{reduce} phase is $\theta(c \times A)$.
+
+\subsection{Building the binary tree}
+The second stage is the building of the binary tree. This is a more difficult operation to parallelize since 
+most of the operations are sequential. Furthermore, the complexity of this stage is $\theta(A \times log (A))$  where 
+$A$ is the number of differtent symbols (128), so basically it is a constant in our case.
+
+\subsection{Encoding the file}
+The last stage is the encoding of the file. This is a \textit{map} operation, since each character has to be replaced with its code.
+Unfortunately, the lenght of the final text can only be known after each character has been encoded (since the encoding of each character
+has a different lenght), so the actual writing needs a step of syncronization. The sequential complexity of this stage is $\theta(m)$ where $m$ is 
+the number of characters in the file.
 
 
+\FloatBarrier
 
+\newpage \FloatBarrier
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+
+\end{document}
