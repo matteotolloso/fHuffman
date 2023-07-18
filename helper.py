@@ -4,7 +4,7 @@ import random
 import string
 
 def generate_file():
-    with open('bigdata.txt', 'w') as f:
+    with open('dataset/bigdata.txt', 'w') as f:
         chars = []
         for i in range(int(1e9)):
             c = random.choice(string.ascii_letters)  

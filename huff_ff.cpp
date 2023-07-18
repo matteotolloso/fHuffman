@@ -3,58 +3,11 @@
 #include <iostream>
 #include <utimer.cpp>
 #include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include<map>
+#include <map>
+#include <huffman_codes.cpp>
+#include <utils.cpp>
 
 #define CODE_POINTS 128
-
-void encode(std::string contents, std::string encoded_file, int* encoder) {
-
-    utimer timer("encode file");
-
-    std::ofstream outfile(encoded_file, std::ios::binary);
-
-    std::vector<bool> bits;
-
-    // read the file and store the bits in a vector
-
-    for (char ch : contents) {
-        int code = encoder[(int)ch];
-        while (code > 0) {
-            bits.push_back(1);
-            code--;
-        }
-        bits.push_back(0);
-    }
-
-    // TODO find a better way to write the bits in the file
-    // write the bits in the file
-    for (bool bit : bits) {
-        outfile << bit;
-    }
-}
-
-
-
-void mmap_file(char * filepath,  char ** mapped_file){
-
-    // TODO check the errors of the system calls
-
-    utimer utimer("mmap file");
-
-    int fd = open(filepath, O_RDONLY, 0);
-
-    struct stat statbuf;
-    fstat(fd, &statbuf);
-    int file_len = statbuf.st_size;
-
-    *mapped_file = (char*) mmap(
-        NULL, file_len,
-        PROT_READ, MAP_PRIVATE,
-        fd, 0
-    );
-}
 
 
 
@@ -161,34 +114,27 @@ int main(int argc, char * argv[]) {
         sequential_reduce_function,
         nworkers
     );
+
+    // print the counts
+    for (int i = 0; i < CODE_POINTS; i++){
+        if (global_counts[i] != 0){
+            std::cout << (char) i << " " << global_counts[i] << std::endl;
+        }
+    }
     
 
     // BUILD THE HUFFMAN TREE
 
-    std::vector<std::pair<int, char>> global_counts_vector(CODE_POINTS);
+    std::vector<string> encoder(CODE_POINTS);
+    
+    huffman_codes(global_counts, encoder);
 
-    for(int i = 0; i<CODE_POINTS; i++){
-        global_counts_vector[i] = std::make_pair(global_counts[i], i);
-    }
-
-
-    std::sort(
-        global_counts_vector.begin(), 
-        global_counts_vector.end(), 
-        [](const std::pair<int, char>& a, const std::pair<int, char>& b) -> bool {
-            return a.first > b.first;
+    // print the codes
+    for (auto i = 0; i < encoder.size(); i++){
+        if (encoder[i] != ""){
+            std::cout << (char) i << " " << encoder[i] << std::endl;
         }
-    );
-
-    int * code = new int[CODE_POINTS];
-
-    for (int i = 0; i < CODE_POINTS; i++) {
-        code[(int) global_counts_vector[i].second] = i;
     }
-
-    // ENCODE THE FILE
-
-    encode(mapped_file, "outputs/encoded_file.txt", code);
 
 
 

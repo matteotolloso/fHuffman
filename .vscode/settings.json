@@ -11,7 +11,9 @@
         "cmath": "cpp",
         "regex": "cpp",
         "valarray": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "future": "cpp",
+        "system_error": "cpp"
     },
     "cmake.sourceDirectory": "/home/matteo/fHuffman/"
 }
