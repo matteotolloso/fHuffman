@@ -138,18 +138,47 @@ int main(int argc, char * argv[]) {
     }
 
 
-    // ENCODE THE FILE
+    // ********** ENCODE THE FILE **********
 
-    auto map_encode_function = [&](const long start_index, const long stop_index, int thid){
+
+    std::vector<std::tuple<long, string*, long>> encoded_chunks;
+    long encodedDataSize = 0;
+
+    ff::ParallelForPipeReduce<std::tuple<long, string*, long> *> pfpr(nworkers,true);
+    pfr.disableScheduler();
+
+
+
+    auto Map = [&](const long start, const long stop, const int thid, ff::ff_buffernode &node) {
+
+        std::string * encoding = new std::string;
         
-        utimer utimer("map encode function thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
-
-        for (long i = start_index; i < stop_index; i++){
-            mapped_file[i] = encoder[(int) mapped_file[i]][0];
+        for(long i=start;i<stop;++i)  {
+            encoding->append(encoder[(int) mapped_file[i]]);
         }
+
+        std::tuple<long, string*, long> * tuple = new std::tuple<long, string*, long>(start, encoding, encoding->size());
+
+        node.ff_send_out(tuple);
     };
 
-    pfr.parallel_for_idx(0, dataSize, 1 ,CHUNKSIZE, map_encode_function, nworkers);
+
+    auto Reduce = [&](std::tuple<long, string*, long > * v) {
+        
+        encoded_chunks.push_back(*v);
+        encodedDataSize += std::get<2>(*v);
+    };
+
+
+    pfpr.parallel_reduce_idx(0, dataSize, 1, CHUNKSIZE, Map, Reduce);
+
+    
+    // ********** WRITE THE ENCODED FILE **********
+
+    std::sort(encoded_chunks.begin(), encoded_chunks.end(), [](const std::tuple<long, string*, long> &a, const std::tuple<long, string*, long> &b) -> bool { return std::get<0>(a) < std::get<0>(b); });
+
+
+
 
 
     

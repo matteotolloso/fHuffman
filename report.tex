@@ -22,13 +22,13 @@
 \usepackage{nameref}
 
 
-\title{\vspace{2cm}\textbf{Huffman code} \\
+\title{\vspace{2cm}\textbf{Parallel implementation of Huffman Code using native C++ threads and FastFlow library} \\
         \bigskip
         \Large{
             \medskip
-            University of Pisa \\
-            \medskip
             Parallel and Distributed Systems: Paradigms and Models \\
+            \medskip
+            University of Pisa \\
             \medskip
             Project Report\\
             \medskip
@@ -70,8 +70,20 @@ since we have all input available at the beginning of the computation.
 As stated above, the first stage is a counting one. This is clearly a \textit{map-reduce} operation.
 
 \paragraph*{Map}
-The \textit{map} part can be execute in parallel dividing the file into chunks, the workers count the occurences of each character
+The \textit{map} part can be execute in parallel dividing the file into chunks, the workers count the occurences 
 in a chunk of the file. The asymptotic sequential complexity of this part is $\theta(m)$ where $m$ is the number of characters in the file.
+
+This operation has to deal with the disk. Under the following assumptions:
+\begin{itemize}
+    \item the reading of a chunk from  the disk is slower than the counting operation of that chunk;
+    \item the readings are sequential;
+\end{itemize}
+it seems useless to parallelize this phase, since the disk is the bottleneck of the operation.
+The minimum completion time could be achived with two workers in pipeline, one reading and one counting.
+
+Nevertheless, the tests that i did mapping the file in main memory and reading it with multiple threads, showed that the parallelization
+actually improves the performance. This is probably due to how the SSD works and the caching syestems. Quantitative results 
+are shown in section \ref{sec:results} .
 
 \paragraph*{Reduce}
 The \textit{reduce} operation can again be executed in parallel, this 
@@ -88,12 +100,21 @@ $A$ is the number of differtent symbols (128), so basically it is a constant in 
 
 \subsection{Encoding the file}
 The last stage is the encoding of the file. This is a \textit{map} operation, since each character has to be replaced with its code.
-Unfortunately, the lenght of the final text can only be known after each character has been encoded (since the encoding of each character
+Unfortunately, the lenght of the final text can only be known after each character has been encoded (because the encoding of each character
 has a different lenght), so the actual writing needs a step of syncronization. The sequential complexity of this stage is $\theta(m)$ where $m$ is 
 the number of characters in the file.
 
+We can make a similar reasoning as the one made for the \textit{map} phase of the counting stage. The disk could be the bottleneck of the operation.
+If we divide the file in chunks and we encode in parallel each of them, we end up with a set of encoded chunks that have to be sorted and summed to 
+get the total lenght before writing (if we want to write them in parallel). This operation has a complexity of $\theta(c \times log(c))$ where $c$ is the number of chunks.
 
-\FloatBarrier
+
+\section{Implementation}
+
+
+\section{Results \label{sec:results}}
+
+
 
 \newpage \FloatBarrier
 \bibliographystyle{plain}
