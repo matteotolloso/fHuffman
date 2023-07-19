@@ -126,8 +126,9 @@ int main(int argc, char * argv[]) {
     // BUILD THE HUFFMAN TREE
 
     std::vector<string> encoder(CODE_POINTS);
+    MinHeapNode* decoder;
     
-    huffman_codes(global_counts, encoder);
+    huffman_codes(global_counts, encoder, decoder);
 
     // print the codes
     for (auto i = 0; i < encoder.size(); i++){
@@ -136,6 +137,19 @@ int main(int argc, char * argv[]) {
         }
     }
 
+
+    // ENCODE THE FILE
+
+    auto map_encode_function = [&](const long start_index, const long stop_index, int thid){
+        
+        utimer utimer("map encode function thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+
+        for (long i = start_index; i < stop_index; i++){
+            mapped_file[i] = encoder[(int) mapped_file[i]][0];
+        }
+    };
+
+    pfr.parallel_for_idx(0, dataSize, 1 ,CHUNKSIZE, map_encode_function, nworkers);
 
 
     

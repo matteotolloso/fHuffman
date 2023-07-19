@@ -1,3 +1,6 @@
+#ifndef HUFFMAN_CODES_CPP
+#define HUFFMAN_CODES_CPP
+
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -35,7 +38,7 @@ void make_encoder(struct MinHeapNode *root, std::vector<string> & encoder, strin
     make_encoder(root->rChild, encoder, str + "1");
 }
 
-void huffman_codes(std::map<char, int> global_counts, std::vector<string> & encoder){
+void huffman_codes(std::map<char, int> global_counts, std::vector<string> & encoder, MinHeapNode* & decoder){
 
     struct MinHeapNode *lChild, *rChild, *top;
 
@@ -62,9 +65,28 @@ void huffman_codes(std::map<char, int> global_counts, std::vector<string> & enco
     }
 
     make_encoder(minHeap.top(), encoder);
+
+    decoder = minHeap.top();
+}
+
+void decode(MinHeapNode* root, string s, int &index, string &decoded){
+    if (root == NULL)
+        return;
+
+    if (root->d != NOT_ASCII_CHAR){
+        decoded += root->d;
+        return;
+    }
+
+    index++;
+
+    if (s[index] == '0')
+        decode(root->lChild, s, index, decoded);
+    else
+        decode(root->rChild, s, index, decoded);
 }
 
 
-
+#endif
 
 
