@@ -141,13 +141,11 @@ int main(int argc, char * argv[]) {
     // ********** ENCODE THE FILE **********
 
 
-    std::vector<std::tuple<long, string*, long>> encoded_chunks;
+    std::vector<std::tuple<long, string*>> encoded_chunks; // (start index if the original file, encoded string)
     long encodedDataSize = 0;
 
-    ff::ParallelForPipeReduce<std::tuple<long, string*, long> *> pfpr(nworkers,true);
+    ff::ParallelForPipeReduce<std::tuple<long, string*> *> pfpr(nworkers,true);
     pfr.disableScheduler();
-
-
 
     auto Map = [&](const long start, const long stop, const int thid, ff::ff_buffernode &node) {
 
@@ -157,31 +155,53 @@ int main(int argc, char * argv[]) {
             encoding->append(encoder[(int) mapped_file[i]]);
         }
 
-        std::tuple<long, string*, long> * tuple = new std::tuple<long, string*, long>(start, encoding, encoding->size());
+        std::tuple<long, string*> * tuple = new std::tuple<long, string*>(start, encoding);
 
         node.ff_send_out(tuple);
     };
 
-
-    auto Reduce = [&](std::tuple<long, string*, long > * v) {
+    auto Reduce = [&](std::tuple<long, string* > * v) {
         
         encoded_chunks.push_back(*v);
-        encodedDataSize += std::get<2>(*v);
+    
     };
 
-
     pfpr.parallel_reduce_idx(0, dataSize, 1, CHUNKSIZE, Map, Reduce);
+
+    // free the memory of the mapped file
+    munmap(mapped_file, dataSize);
+
 
     
     // ********** WRITE THE ENCODED FILE **********
 
-    std::sort(encoded_chunks.begin(), encoded_chunks.end(), [](const std::tuple<long, string*, long> &a, const std::tuple<long, string*, long> &b) -> bool { return std::get<0>(a) < std::get<0>(b); });
+    char ** mapped_encoded_file;
 
+    // sort the chunks by the start index in the original file
+    std::sort(encoded_chunks.begin(), encoded_chunks.end(), [](const std::tuple<long, string*> &a, const std::tuple<long, string*> &b) -> bool { return std::get<0>(a) < std::get<0>(b); });
 
+    // the start index in the original file becomes the start index in the encoded file,
+    // so we can write in parallel the encoded chunks in the encoded file
+    for (auto chunk: encoded_chunks){
+        std::get<0>(chunk) = encodedDataSize; 
+        encodedDataSize += std::get<1>(chunk)->size();
+    }
 
+    mmap_file_write("outputs/encoded.txt", encodedDataSize, mapped_encoded_file);
 
+    // start and stop index represent the range of chunks in the encoded chunks vector
+    auto map_writer = [&](const long start_index, const long stop_index, int thid){
+        
+        for (long i = start_index; i < stop_index; i++){
+            std::string * encoding = std::get<1>(encoded_chunks[i]);
+            memcpy(*mapped_encoded_file + std::get<0>(encoded_chunks[i]), encoding->c_str(), encoding->size());
+        }
+        
+    };
 
-    
+    pfr.parallel_for_idx(0, encoded_chunks.size(), 1 ,CHUNKSIZE, map_writer, nworkers);
+
+    mmap_file_sync(mapped_encoded_file, encodedDataSize);
 
     
     return 0;

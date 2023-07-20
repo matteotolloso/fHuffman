@@ -6,11 +6,13 @@
 #include <fcntl.h>
 #include <utimer.cpp>
 
+
+
 void mmap_file(char * filepath,  char ** mapped_file){
 
     // TODO check the errors of the system calls
 
-    utimer utimer("mmap file");
+    utimer utimer("mmap file read");
 
     int fd = open(filepath, O_RDONLY, 0);
 
@@ -25,4 +27,26 @@ void mmap_file(char * filepath,  char ** mapped_file){
     );
 }
 
-#endif
+void mmap_file_write(char * filepath, long file_len, char ** mapped_file ){
+
+    // TODO check the errors of the system calls
+
+    utimer utimer("mmap file write");
+
+    int fd = open(filepath, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
+
+    size_t textsize = file_len + 1; 
+
+    lseek(fd, textsize-1, SEEK_SET);
+
+    write(fd, "", 1);
+
+    char *map = (char*) mmap(0, textsize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+}
+
+void mmap_file_sync(char** mapped_file, long file_len){
+    msync(mapped_file, file_len, MS_SYNC);
+    munmap(mapped_file, file_len);
+}
+
+#endif;
