@@ -13,7 +13,6 @@
 
 int main(int argc, char * argv[]) { 
 
-
     char * filepath;
     int nworkers;
     int CHUNKSIZE;
@@ -21,7 +20,7 @@ int main(int argc, char * argv[]) {
     if (argc != 4) {
         std::cout << "Usage: ./huff_ff <filepath> <nworkers> <chunksize>" << std::endl;
         filepath = "dataset/test.txt";
-        nworkers = 1;
+        nworkers = 8;
         CHUNKSIZE = 1;
     }
     else{
@@ -50,7 +49,7 @@ int main(int argc, char * argv[]) {
 
     auto map_counts_function = [&](const long start_index, const long stop_index, int thid){
         
-        utimer utimer("map function thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        utimer utimer("map function counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
 
         if (counts[thid] == nullptr){
             counts[thid] = new int[CODE_POINTS]();
@@ -77,7 +76,7 @@ int main(int argc, char * argv[]) {
 
     auto parallel_reduce_function = [&](const long start_index, const long stop_index, std::map<char, int>& reduce_counts, const int thid) {
 
-        utimer utimer("parallel reduce function thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
         
         for (long i = start_index; i < stop_index; i++){
             reduce_counts[i] = 0;
@@ -98,7 +97,7 @@ int main(int argc, char * argv[]) {
     std::map<char, int> global_counts;
 
     auto sequential_reduce_function = [](std::map<char, int>& v, const std::map<char, int>& elem) {
-        utimer utimer("sequential reduce function");
+        utimer utimer("sequential reduce counts");
         
         for (auto key_value: elem){
             v[key_value.first] += key_value.second;
@@ -204,6 +203,8 @@ int main(int argc, char * argv[]) {
     // start and stop index represent the range of chunks in the encoded chunks vector
     auto map_writer = [&](const long start_index, const long stop_index, int thid){
         
+        utimer utimer("map function write, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+
         for (long i = start_index; i < stop_index; i++){
             std::string * encoding = std::get<1>(encoded_chunks[i]);
             memcpy(*mapped_encoded_file + std::get<0>(encoded_chunks[i]), encoding->c_str(), encoding->size());
