@@ -33,15 +33,11 @@ void mmap_file_write(char * filepath, long file_len, char ** mapped_file ){
 
     utimer utimer("mmap file write");
 
-    int fd = open(filepath, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
+    int fd = open(filepath, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); 
 
-    size_t textsize = file_len + 1; 
+    ftruncate(fd, file_len);
 
-    lseek(fd, textsize-1, SEEK_SET);
-
-    write(fd, "", 1);
-
-    char *map = (char*) mmap(0, textsize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    (*mapped_file) = (char*) mmap(0, file_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 }
 
 void mmap_file_sync(char** mapped_file, long file_len){
@@ -49,4 +45,4 @@ void mmap_file_sync(char** mapped_file, long file_len){
     munmap(mapped_file, file_len);
 }
 
-#endif;
+#endif

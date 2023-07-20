@@ -116,11 +116,11 @@ int main(int argc, char * argv[]) {
     );
 
     // print the counts
-    for (int i = 0; i < CODE_POINTS; i++){
-        if (global_counts[i] != 0){
-            std::cout << (char) i << " " << global_counts[i] << std::endl;
-        }
-    }
+    // for (int i = 0; i < CODE_POINTS; i++){
+    //     if (global_counts[i] != 0){
+    //         std::cout << (char) i << " " << global_counts[i] << std::endl;
+    //     }
+    // }
     
 
     // BUILD THE HUFFMAN TREE
@@ -128,14 +128,18 @@ int main(int argc, char * argv[]) {
     std::vector<string> encoder(CODE_POINTS);
     MinHeapNode* decoder;
     
+    {
+    utimer utimer("huffman encoder and decoder creation");
     huffman_codes(global_counts, encoder, decoder);
+    }
+    
 
     // print the codes
-    for (auto i = 0; i < encoder.size(); i++){
-        if (encoder[i] != ""){
-            std::cout << (char) i << " " << encoder[i] << std::endl;
-        }
-    }
+    // for (auto i = 0; i < encoder.size(); i++){
+    //     if (encoder[i] != ""){
+    //         std::cout << (char) i << " " << encoder[i] << std::endl;
+    //     }
+    // }
 
 
     // ********** ENCODE THE FILE **********
@@ -149,6 +153,12 @@ int main(int argc, char * argv[]) {
 
     auto Map = [&](const long start, const long stop, const int thid, ff::ff_buffernode &node) {
 
+        if (start == stop){
+            return;
+        }
+
+        utimer utimer("map function encode, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
+        
         std::string * encoding = new std::string;
         
         for(long i=start;i<stop;++i)  {
@@ -162,6 +172,8 @@ int main(int argc, char * argv[]) {
 
     auto Reduce = [&](std::tuple<long, string* > * v) {
         
+        utimer utimer("reduce function encode");
+
         encoded_chunks.push_back(*v);
     
     };
