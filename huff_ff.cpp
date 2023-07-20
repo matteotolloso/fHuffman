@@ -6,34 +6,44 @@
 #include <map>
 #include <huffman_codes.cpp>
 #include <utils.cpp>
+#include <argparse/argparse.hpp>
 
 #define CODE_POINTS 128
 
 
-
 int main(int argc, char * argv[]) { 
 
-    char * filepath;
+    argparse::ArgumentParser program("huff_ff");
+
+    program.add_argument("-i")
+        .help("path of the file to encode")
+        .required();
+    
+    program.add_argument("-o")
+        .help("path of the encoded file")
+        .required();
+    
+
+    try {
+        program.parse_args(argc, argv);    // Example: ./main --color orange
+    }
+        catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
+        std::exit(1);
+    }
+
+    string input_file_path = program.get<string>("-i");
+    string output_file_path = program.get<string>("-o");
     int nworkers;
     int CHUNKSIZE;
 
-    if (argc != 4) {
-        std::cout << "Usage: ./huff_ff <filepath> <nworkers> <chunksize>" << std::endl;
-        filepath = "dataset/test.txt";
-        nworkers = 8;
-        CHUNKSIZE = 1;
-    }
-    else{
-        filepath = argv[1];
-        nworkers = atoi(argv[2]);
-        CHUNKSIZE= atoi(argv[3]);
-    }
 
     int ** counts = new int*[nworkers]{};
     std::fill(counts, counts+nworkers, nullptr);
 
     char * mapped_file;
-    mmap_file(filepath, &mapped_file);
+    mmap_file(input_file_path, &mapped_file);
 
     int dataSize = strlen(mapped_file);
     std::cout << "data size: " << dataSize << std::endl;
@@ -68,11 +78,7 @@ int main(int argc, char * argv[]) {
     pfr.parallel_for_idx(0, dataSize, 1 ,CHUNKSIZE, map_counts_function, nworkers);
     
 
-    
-
-
     // PARALLEL REDUCE
-
 
     auto parallel_reduce_function = [&](const long start_index, const long stop_index, std::map<char, int>& reduce_counts, const int thid) {
 

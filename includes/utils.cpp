@@ -9,11 +9,13 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-void mmap_file(char * filepath,  char ** mapped_file){
+void mmap_file(string filepath,  char ** mapped_file){
 
     utimer utimer("mmap file read");
 
-    int fd = open(filepath, O_RDONLY, 0);
+    
+
+    int fd = open(filepath.c_str(), O_RDONLY, 0);
 
     if (fd == -1){
         perror("Error opening file for reading");
@@ -41,11 +43,11 @@ void mmap_file(char * filepath,  char ** mapped_file){
     }
 }
 
-void mmap_file_write(char * filepath, long file_len, char ** mapped_file ){
+void mmap_file_write(string filepath, long file_len, char ** mapped_file ){
 
     utimer utimer("mmap file write");
 
-    int fd = open(filepath, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); 
+    int fd = open(filepath.c_str(), O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); 
 
     if (fd == -1){
         perror("Error opening file for writing");

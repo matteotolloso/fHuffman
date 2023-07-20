@@ -6,7 +6,9 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/includes",
                 "${workspaceFolder}/fastflow/",
-                "${workspaceFolder}/fastflow/ff/"
+                "${workspaceFolder}/fastflow/",
+                "${workspaceFolder}/argparse/",
+                "${workspaceFolder}/argparse/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

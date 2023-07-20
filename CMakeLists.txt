@@ -10,6 +10,7 @@ add_compile_definitions(DEBUG=${DEBUG})
 
 include_directories(./includes)
 include_directories(./fastflow)
+include_directories(./argparse/include)
 
 
 add_executable(huff_seq huff_seq.cpp)
