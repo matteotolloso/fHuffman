@@ -12,6 +12,7 @@
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-I${workspaceFolder}/includes",
                 "-I${workspaceFolder}/fastflow/",
+                "-I${workspaceFolder}/argparse/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"

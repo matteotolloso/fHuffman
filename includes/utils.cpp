@@ -8,12 +8,9 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
+#include <string>
 
-void mmap_file(string filepath,  char ** mapped_file){
-
-    utimer utimer("mmap file read");
-
-    
+void mmap_file(std::string filepath,  char ** mapped_file){
 
     int fd = open(filepath.c_str(), O_RDONLY, 0);
 
@@ -43,7 +40,7 @@ void mmap_file(string filepath,  char ** mapped_file){
     }
 }
 
-void mmap_file_write(string filepath, long file_len, char ** mapped_file ){
+void mmap_file_write(std::string filepath, long file_len, char* &mapped_file ){
 
     utimer utimer("mmap file write");
 
@@ -59,16 +56,16 @@ void mmap_file_write(string filepath, long file_len, char ** mapped_file ){
         exit(EXIT_FAILURE);
     }
 
-    (*mapped_file) = (char*) mmap(0, file_len +1 , PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    mapped_file = (char*) mmap(0, file_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
-    if (*mapped_file == MAP_FAILED){
+    if (mapped_file == MAP_FAILED){
         close(fd);
         perror("Error mmapping the file");
         exit(EXIT_FAILURE);
     }
 }
 
-void mmap_file_sync(char** mapped_file, long file_len){
+void mmap_file_sync(char* & mapped_file, long file_len){
     int res = msync(mapped_file, file_len, MS_SYNC);
     if (res == -1){
         perror("Error syncing the file");

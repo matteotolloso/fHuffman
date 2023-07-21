@@ -6,60 +6,78 @@
 #include <map>
 #include <huffman_codes.cpp>
 #include <utils.cpp>
-#include <argparse/argparse.hpp>
+//#include <argparse/argparse.hpp>
 
 #define CODE_POINTS 128
 
 
 int main(int argc, char * argv[]) { 
 
-    argparse::ArgumentParser program("huff_ff");
+    // argparse::ArgumentParser program("huff_ff");
 
-    program.add_argument("-i")
-        .help("path of the file to encode")
-        .required();
+    // program.add_argument("-i")
+    //     .help("path of the file to encode")
+    //     .default_value("dataset/test.txt")
+    //     .required();
     
-    program.add_argument("-o")
-        .help("path of the encoded file")
-        .required();
+    // program.add_argument("-o")
+    //     .help("path of the encoded file")
+    //     .default_value("outputs/test.txt")
+    //     .required();
+
+    // program.add_argument("-n")
+    //     .help("number of workers")
+    //     .default_value(4)
+    //     .required();
     
 
-    try {
-        program.parse_args(argc, argv);    // Example: ./main --color orange
-    }
-        catch (const std::runtime_error& err) {
-        std::cerr << err.what() << std::endl;
-        std::cerr << program;
-        std::exit(1);
-    }
+    // try {
+    //     program.parse_args(argc, argv);    // Example: ./main --color orange
+    // }
+    //     catch (const std::runtime_error& err) {
+    //     std::cerr << err.what() << std::endl;
+    //     std::cerr << program;
+    //     std::exit(1);
+    // }
 
-    string input_file_path = program.get<string>("-i");
-    string output_file_path = program.get<string>("-o");
-    int nworkers;
-    int CHUNKSIZE;
+    // string input_file_path = program.get<string>("-i");
+    // string output_file_path = program.get<string>("-o");
+    // int nworkers = program.get<int>("-n");
+
+
+
+    // std::string original_filename = "./dataset/bigdata.txt";
+    // std::string encoded_filename = "./outputs/test.txt";
+    // int nworkers = 2;
+
+
+    std::string original_filename = argv[1];
+    std::string encoded_filename = argv[2];
+    int nworkers = atoi(argv[3]);
+    
+    
+    int CHUNKSIZE = 0;
 
 
     int ** counts = new int*[nworkers]{};
     std::fill(counts, counts+nworkers, nullptr);
 
     char * mapped_file;
-    mmap_file(input_file_path, &mapped_file);
+    mmap_file(original_filename, &mapped_file);
 
-    int dataSize = strlen(mapped_file);
+    long unsigned dataSize = strlen(mapped_file);
     std::cout << "data size: " << dataSize << std::endl;
 
 
-    // PARALLEL FOR REDUCE INITIALIZATION
+    // ********** PARALLEL FOR REDUCE INITIALIZATION **********
 
-    // TODO check the parallel for pipe reduce
+
     ff::ParallelForReduce<std::map<char, int>> pfr(nworkers, false, false);
 
 
-    // PARALLEL FOR (MAP) CHARACTER COUNT
-
-    auto map_counts_function = [&](const long start_index, const long stop_index, int thid){
+    auto parallel_for_counts_function = [&](const long start_index, const long stop_index, int thid){
         
-        utimer utimer("map function counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        // utimer utimer("map function counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
 
         if (counts[thid] == nullptr){
             counts[thid] = new int[CODE_POINTS]();
@@ -69,20 +87,11 @@ int main(int argc, char * argv[]) {
             counts[thid][ (int) mapped_file[i]]++;
         }
     };
-
     
-    // TODO check the chunksize
-    CHUNKSIZE = dataSize / nworkers;
-    std::cout << "chunksize: " << CHUNKSIZE << std::endl;
-    //pfr.parallel_for_static(0,arraySize,1,CHUNKSIZE, [&](const long j) { A[j]=j*3.14; B[j]=2.1*j;});
-    pfr.parallel_for_idx(0, dataSize, 1 ,CHUNKSIZE, map_counts_function, nworkers);
-    
-
-    // PARALLEL REDUCE
 
     auto parallel_reduce_function = [&](const long start_index, const long stop_index, std::map<char, int>& reduce_counts, const int thid) {
 
-        utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        // utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
         
         for (long i = start_index; i < stop_index; i++){
             reduce_counts[i] = 0;
@@ -99,11 +108,11 @@ int main(int argc, char * argv[]) {
         } 
     };
 
-
     std::map<char, int> global_counts;
 
     auto sequential_reduce_function = [](std::map<char, int>& v, const std::map<char, int>& elem) {
-        utimer utimer("sequential reduce counts");
+        
+        // utimer utimer("sequential reduce counts");
         
         for (auto key_value: elem){
             v[key_value.first] += key_value.second;
@@ -112,6 +121,11 @@ int main(int argc, char * argv[]) {
     };
 
 
+    {
+    utimer utimer("counting characters");
+
+    pfr.parallel_for_idx(0, dataSize, 1 ,CHUNKSIZE, parallel_for_counts_function, nworkers);
+    
     pfr.parallel_reduce_idx(
         global_counts, std::map<char, int>(),
         0, CODE_POINTS, 1, CHUNKSIZE,
@@ -120,15 +134,10 @@ int main(int argc, char * argv[]) {
         nworkers
     );
 
-    // print the counts
-    // for (int i = 0; i < CODE_POINTS; i++){
-    //     if (global_counts[i] != 0){
-    //         std::cout << (char) i << " " << global_counts[i] << std::endl;
-    //     }
-    // }
-    
+    }
 
-    // BUILD THE HUFFMAN TREE
+
+    // ********** BUILD THE HUFFMAN TREE **********
 
     std::vector<string> encoder(CODE_POINTS);
     MinHeapNode* decoder;
@@ -137,90 +146,81 @@ int main(int argc, char * argv[]) {
     utimer utimer("huffman encoder and decoder creation");
     huffman_codes(global_counts, encoder, decoder);
     }
-    
-
-    // print the codes
-    // for (auto i = 0; i < encoder.size(); i++){
-    //     if (encoder[i] != ""){
-    //         std::cout << (char) i << " " << encoder[i] << std::endl;
-    //     }
-    // }
 
 
     // ********** ENCODE THE FILE **********
 
+    // TODO add the reserve to avoid the reallocation
 
-    std::vector<std::tuple<long, string*>> encoded_chunks; // (start index if the original file, encoded string)
-    long encodedDataSize = 0;
 
-    ff::ParallelForPipeReduce<std::tuple<long, string*> *> pfpr(nworkers,true);
-    pfr.disableScheduler();
+    std::vector<std::tuple<long, std::vector<bool>* > *> encoded_chunks(nworkers); // (start index if the original file, encoded string)
 
-    auto Map = [&](const long start, const long stop, const int thid, ff::ff_buffernode &node) {
+    auto parallel_for_encode_function = [&](const long start, const long stop, const int thid) {
 
-        if (start == stop){
-            return;
+
+        // utimer utimer("map function encode, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
+        
+        std::vector<bool> * encoding = new std::vector<bool>;
+        
+        for(long i = start; i < stop; i++)  {
+            for (char bit : encoder[(int)mapped_file[i]]) {
+                encoding->push_back(bit == '1');
+            }
         }
 
-        utimer utimer("map function encode, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
-        
-        std::string * encoding = new std::string;
-        
-        for(long i=start;i<stop;++i)  {
-            encoding->append(encoder[(int) mapped_file[i]]);
+        std::tuple<long, std::vector<bool>* > * tuple = new std::tuple<long, std::vector<bool>* >(start, encoding);
+
+        encoded_chunks[thid] = tuple;
+    };
+
+
+    {
+    utimer utimer("encoding file");
+    pfr.parallel_for_idx(0, dataSize, 1, CHUNKSIZE, parallel_for_encode_function, nworkers);
+    std::sort(
+        encoded_chunks.begin(), 
+        encoded_chunks.end(), 
+        [](const std::tuple<long, std::vector<bool>* > * &a, const std::tuple<long, std::vector<bool>* > * &b) -> bool { 
+            return (std::get<0>(*a) < std::get<0>(*b)); 
         }
-
-        std::tuple<long, string*> * tuple = new std::tuple<long, string*>(start, encoding);
-
-        node.ff_send_out(tuple);
-    };
-
-    auto Reduce = [&](std::tuple<long, string* > * v) {
-        
-        utimer utimer("reduce function encode");
-
-        encoded_chunks.push_back(*v);
-    
-    };
-
-    pfpr.parallel_reduce_idx(0, dataSize, 1, CHUNKSIZE, Map, Reduce);
-
-    // free the memory of the mapped file
-    munmap(mapped_file, dataSize);
-
-
-    
-    // ********** WRITE THE ENCODED FILE **********
-
-    char ** mapped_encoded_file;
-
-    // sort the chunks by the start index in the original file
-    std::sort(encoded_chunks.begin(), encoded_chunks.end(), [](const std::tuple<long, string*> &a, const std::tuple<long, string*> &b) -> bool { return std::get<0>(a) < std::get<0>(b); });
-
-    // the start index in the original file becomes the start index in the encoded file,
-    // so we can write in parallel the encoded chunks in the encoded file
-    for (auto chunk: encoded_chunks){
-        std::get<0>(chunk) = encodedDataSize; 
-        encodedDataSize += std::get<1>(chunk)->size();
+    );
     }
 
-    mmap_file_write("outputs/encoded.txt", encodedDataSize, mapped_encoded_file);
 
-    // start and stop index represent the range of chunks in the encoded chunks vector
-    auto map_writer = [&](const long start_index, const long stop_index, int thid){
-        
-        utimer utimer("map function write, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+    // ********** WRITE THE ENCODED FILE **********
 
-        for (long i = start_index; i < stop_index; i++){
-            std::string * encoding = std::get<1>(encoded_chunks[i]);
-            memcpy(*mapped_encoded_file + std::get<0>(encoded_chunks[i]), encoding->c_str(), encoding->size());
+    long encodedDataSize = 0;
+    
+    int padding = 0;
+
+    std::vector<bool> encoded_contents;
+
+    for (auto tuple : encoded_chunks){
+        encoded_contents.insert(encoded_contents.end(), std::get<1>(*tuple)->begin(), std::get<1>(*tuple)->end());
+    }
+
+    while(encoded_contents.size() % 8 != 0){
+        encoded_contents.push_back(false);
+        padding++;
+    }
+    
+    std::ofstream encoded(encoded_filename);
+
+    // write the encoded file building one byte each 8 bit
+    for (long unsigned i = 0; i < encoded_contents.size(); i += 8) {
+        char byte = 0;
+        for (int j = 0; j < 8; j++) {
+            byte = byte << 1;
+            if (encoded_contents[i + j]) {
+                byte = byte | 1;
+            }
         }
-        
-    };
+        encoded << byte;
+    }
 
-    pfr.parallel_for_idx(0, encoded_chunks.size(), 1 ,CHUNKSIZE, map_writer, nworkers);
+    encoded.close();
+    
 
-    mmap_file_sync(mapped_encoded_file, encodedDataSize);
 
     
     return 0;
