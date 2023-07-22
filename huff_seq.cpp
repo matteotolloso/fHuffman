@@ -105,27 +105,27 @@ int main(int argc, char** argv){
     unsigned short padding = 0;
 
     {
-        utimer utimer("writing encoded file");
+    utimer utimer("writing encoded file");
 
-        // make the size of the encoded file a multiple of 8
-        while (encoded_contents.size() % 8 != 0) {
-            encoded_contents.push_back(false);
-            padding++;
-        }
+    // make the size of the encoded file a multiple of 8
+    while (encoded_contents.size() % 8 != 0) {
+        encoded_contents.push_back(false);
+        padding++;
+    }
 
-        // write the encoded file building one byte each 8 bit
-        for (long unsigned i = 0; i < encoded_contents.size(); i += 8) {
-            char byte = 0;
-            for (int j = 0; j < 8; j++) {
-                byte = byte << 1;
-                if (encoded_contents[i + j]) {
-                    byte = byte | 1;
-                }
+    // write the encoded file building one byte each 8 bit
+    for (long unsigned i = 0; i < encoded_contents.size(); i += 8) {
+        char byte = 0;
+        for (int j = 0; j < 8; j++) {
+            byte = byte << 1;
+            if (encoded_contents[i + j]) {
+                byte = byte | 1;
             }
-            encoded << byte;
         }
+        encoded << byte;
+    }
 
-        encoded.close();
+    encoded.close();
     }
 
 

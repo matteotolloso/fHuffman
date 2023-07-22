@@ -180,7 +180,7 @@ int main(int argc, char * argv[]) {
     std::sort(
         encoded_chunks.begin(), 
         encoded_chunks.end(), 
-        [](const std::tuple<long, std::vector<bool>* > * &a, const std::tuple<long, std::vector<bool>* > * &b) -> bool { 
+        [](const std::tuple<long, std::vector<bool>* > * a, const std::tuple<long, std::vector<bool>* > * b) -> bool { 
             return (std::get<0>(*a) < std::get<0>(*b)); 
         }
     );
@@ -194,6 +194,9 @@ int main(int argc, char * argv[]) {
     int padding = 0;
 
     std::vector<bool> encoded_contents;
+
+    {
+    utimer utimer("writing encoded file");
 
     for (auto tuple : encoded_chunks){
         encoded_contents.insert(encoded_contents.end(), std::get<1>(*tuple)->begin(), std::get<1>(*tuple)->end());
@@ -220,6 +223,7 @@ int main(int argc, char * argv[]) {
 
     encoded.close();
     
+    }
 
 
     
