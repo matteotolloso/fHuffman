@@ -82,7 +82,8 @@ it seems useless to parallelize this phase, since the disk is the bottleneck of 
 The minimum completion time could be achived with two workers in pipeline, one reading and one counting.
 
 Nevertheless, the tests that i did mapping the file in main memory and reading it with multiple threads, showed that the parallelization
-actually improves the performance. This is probably due to how the SSD works and the caching syestems. Quantitative results 
+actually improves the performance. This is probably due to how the SSD works and the caching syestems. Furthermore, the 
+counting operation seems to be slower than the disk speed. Quantitative results 
 are shown in section \ref{sec:results} .
 
 \paragraph*{Reduce}
@@ -110,6 +111,31 @@ get the total lenght before writing (if we want to write them in parallel). This
 
 
 \section{Implementation}
+
+\subsection{Overheads}
+
+\paragraph*{False Sharing}
+The false sharing problem is avoided sice each worker writes on a competely different array: the counting arrays
+and the chunk-encoding arrays are allocated by each worker.
+
+\paragraph*{Heap pressure}
+The access to the heap is mutual exclusive, so an high number of allocation/reallocation can cause a big overhead.
+The proble is adressed in two ways:
+\begin{itemize}
+    \item Trying to use dynamic memory management only when strictly necessary
+    \item Use an alternative allocation library optimized for multithread applications
+\end{itemize}
+
+\paragraph*{Load balancing}
+Let's suppose a static load balacing. During the counting operation the file is equally diveded between the workers i.e. each workers counts the same
+number of characters. In the reduce phase each worker takes an equal subset of characters and sums the occurences.
+In both cases could happen that a worker have to deal with bigger number with respect to othes, but there are 
+only \textit{+1} operations thay should not depend on the size of the number. In the encoding phase each
+worker takes a chunk to encode. This part can be really unbalanced if the orginal file has somewhere a lot of 
+alligned equal character, infact, this character will probability have a short code and the worker 
+that encodes that chunk has to do fewer memory reallocations.
+
+
 
 
 \section{Results \label{sec:results}}

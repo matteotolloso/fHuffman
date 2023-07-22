@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  19 JUL 2023 11:30
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  22 JUL 2023 10:50
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -378,19 +378,19 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 74.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 74.
- [2] [3]
+ [2] [3] [4]
 No file report.bbl.
 (./report.aux)
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 8221147E581A50781661763D788FF8DB;1016.
+(rerunfilecheck)             Checksum: 1F5EE4F9C60516F03199F9F2EAE3AE94;1118.
  ) 
 Here is how much of TeX's memory you used:
- 10432 strings out of 478190
- 173302 string characters out of 5854827
- 473993 words of memory out of 5000000
- 30903 multiletter control sequences out of 15000+600000
+ 10433 strings out of 478190
+ 173313 string characters out of 5854827
+ 475110 words of memory out of 5000000
+ 30904 multiletter control sequences out of 15000+600000
  473356 words of font info for 52 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 67i,7n,77p,297b,320s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 67i,7n,77p,297b,386s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on report.pdf (3 pages).
+Output written on report.pdf (4 pages).

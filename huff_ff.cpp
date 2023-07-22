@@ -161,6 +161,8 @@ int main(int argc, char * argv[]) {
         // utimer utimer("map function encode, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
         
         std::vector<bool> * encoding = new std::vector<bool>;
+
+        encoding->reserve((stop-start)* (log2(CODE_POINTS)-1));
         
         for(long i = start; i < stop; i++)  {
             for (char bit : encoder[(int)mapped_file[i]]) {
@@ -192,19 +194,30 @@ int main(int argc, char * argv[]) {
     long encodedDataSize = 0;
     
     int padding = 0;
+    unsigned long encoded_size = 0;
 
     std::vector<bool> encoded_contents;
 
     {
     utimer utimer("writing encoded file");
 
+    for (auto ch : encoded_chunks){
+        encoded_size += std::get<1>(*ch)->size();
+    }
+
+    while(encoded_size % 8 != 0){
+        encoded_size++;
+        padding++;
+    }
+
+    encoded_contents.reserve(encoded_size);
+
     for (auto tuple : encoded_chunks){
         encoded_contents.insert(encoded_contents.end(), std::get<1>(*tuple)->begin(), std::get<1>(*tuple)->end());
     }
 
-    while(encoded_contents.size() % 8 != 0){
+    for (int i = 0; i<padding; i++){
         encoded_contents.push_back(false);
-        padding++;
     }
     
     std::ofstream encoded(encoded_filename);
@@ -225,7 +238,5 @@ int main(int argc, char * argv[]) {
     
     }
 
-
-    
     return 0;
 }
