@@ -17,6 +17,10 @@ int main(int argc, char * argv[]) {
     std::string original_filename = argv[1];
     std::string encoded_filename = argv[2];
     int nworkers = atoi(argv[3]);
+
+    // std::string original_filename = "./dataset/test.txt";
+    // std::string encoded_filename = "./outputs/huff_ff.txt";
+    // int nworkers = 2;
     
     
     int CHUNKSIZE = 0; // static scheduling
@@ -39,7 +43,7 @@ int main(int argc, char * argv[]) {
 
     auto parallel_for_counts_function = [&](const long start_index, const long stop_index, int thid){
         
-        // utimer utimer("map function counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        utimer utimer("parallel_for_counts_function, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
 
         if (counts[thid] == nullptr){
             counts[thid] = new int[CODE_POINTS]();
@@ -53,7 +57,7 @@ int main(int argc, char * argv[]) {
 
     auto parallel_reduce_function = [&](const long start_index, const long stop_index, std::map<char, int>& reduce_counts, const int thid) {
 
-        // utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
         
         for (long i = start_index; i < stop_index; i++){
             reduce_counts[i] = 0;
@@ -112,17 +116,15 @@ int main(int argc, char * argv[]) {
 
     // ********** ENCODE THE FILE **********
 
-
-    std::vector<std::tuple<long, std::vector<bool>* > *> encoded_chunks(nworkers); // (start index if the original file, encoded string)
+    // TODO avoid the sort assigning each thread a chunk of the file
+    std::vector<std::tuple<long, std::deque<bool>* > *> encoded_chunks(nworkers); // (start index if the original file, encoded string)
 
     auto parallel_for_encode_function = [&](const long start, const long stop, const int thid) {
 
 
-        // utimer utimer("map function encode, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
+        utimer utimer("parallel_for_encode_function, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
         
-        std::vector<bool> * encoding = new std::vector<bool>;
-
-        encoding->reserve((stop-start)* (log2(CODE_POINTS)-1));
+        std::deque<bool> * encoding = new std::deque<bool>;
         
         for(long i = start; i < stop; i++)  {
             for (char bit : encoder[(int)mapped_file[i]]) {
@@ -130,7 +132,7 @@ int main(int argc, char * argv[]) {
             }
         }
 
-        std::tuple<long, std::vector<bool>* > * tuple = new std::tuple<long, std::vector<bool>* >(start, encoding);
+        std::tuple<long, std::deque<bool>* > * tuple = new std::tuple<long, std::deque<bool>* >(start, encoding);
 
         encoded_chunks[thid] = tuple;
     };
@@ -142,61 +144,78 @@ int main(int argc, char * argv[]) {
     std::sort(
         encoded_chunks.begin(), 
         encoded_chunks.end(), 
-        [](const std::tuple<long, std::vector<bool>* > * a, const std::tuple<long, std::vector<bool>* > * b) -> bool { 
+        [](const std::tuple<long, std::deque<bool>* > * a, const std::tuple<long, std::deque<bool>* > * b) -> bool { 
             return (std::get<0>(*a) < std::get<0>(*b)); 
         }
     );
     }
 
+    // ********** BALANCING ENCODING **********
 
-    // ********** WRITE THE ENCODED FILE **********
-
-    long encodedDataSize = 0;
-    
     int padding = 0;
-    unsigned long encoded_size = 0;
-
-    std::vector<bool> encoded_contents;
 
     {
-    utimer utimer("writing encoded file");
+    utimer utimer("balancing encoding");
 
-    for (auto ch : encoded_chunks){
-        encoded_size += std::get<1>(*ch)->size();
+    for (long unsigned i = 0; i < encoded_chunks.size() - 1; i++){
+        while(std::get<1>(*encoded_chunks[i])->size() % 8 != 0){
+            bool element = (bool)std::get<1>(*(encoded_chunks[i+1]))->front();
+            std::get<1>(*encoded_chunks[i])->push_back(element);
+            std::get<1>(*(encoded_chunks[i+1]))->pop_front();
+        }
+        // update the start index of the next chunk with the byte size it has to start from
+        std::get<0>(*encoded_chunks[i+1]) = std::get<0>(*encoded_chunks[i]) + (std::get<1>(*encoded_chunks[i])->size() / 8);
     }
 
-    while(encoded_size % 8 != 0){
-        encoded_size++;
+    // pad the last chunk
+    while(std::get<1>(*encoded_chunks[encoded_chunks.size()-1])->size() % 8 != 0){
+        std::get<1>(*encoded_chunks[encoded_chunks.size()-1])->push_back(false);
         padding++;
     }
 
-    encoded_contents.reserve(encoded_size);
+    }
+    // ********** COMPRESSING AND WRITING **********
 
-    for (auto tuple : encoded_chunks){
-        encoded_contents.insert(encoded_contents.end(), std::get<1>(*tuple)->begin(), std::get<1>(*tuple)->end());
+    long encoded_compressed_size = 0;
+    char * mapped_output_file;
+
+    for (auto ch : encoded_chunks){
+        encoded_compressed_size += (std::get<1>(*ch)->size() / 8);
+        std::cout << std::get<1>(*ch)->size() << std::endl;
+        std::cout << std::get<0>(*ch) << std::endl;
     }
 
-    for (int i = 0; i<padding; i++){
-        encoded_contents.push_back(false);
-    }
-    
-    std::ofstream encoded(encoded_filename);
+    mmap_file_write(encoded_filename, encoded_compressed_size, mapped_output_file);
 
-    // write the encoded file building one byte each 8 bit
-    for (long unsigned i = 0; i < encoded_contents.size(); i += 8) {
-        char byte = 0;
-        for (int j = 0; j < 8; j++) {
-            byte = byte << 1;
-            if (encoded_contents[i + j]) {
-                byte = byte | 1;
+
+    auto parallel_for_compress_function = [&](const long index, const int thid) {
+
+        utimer utimer("parallel_for_compress_function, thread " + std::to_string(thid) + " (index " + std::to_string(index) + ")");
+        
+        std::deque<bool>  encoding = *std::get<1>(*encoded_chunks[index]);
+        long start_index = std::get<0>(*encoded_chunks[index]);
+        
+        for (long unsigned i = 0; i < encoding.size(); i += 8) {
+            char byte = 0;
+            for (int j = 0; j < 8; j++) {
+                byte = byte << 1;
+                if (encoding[i + j]) {
+                    byte = byte | 1;
+                }
             }
+            cout<< "thread " << thid << " byte " << byte << " start_index " << start_index << endl;
+            mapped_output_file[start_index++] = byte;
         }
-        encoded << byte;
-    }
+    };
 
-    encoded.close();
+    {
+    utimer utimer("compressing and writing");
+
+    pfr.parallel_for_thid(0, encoded_chunks.size(), 1, -1, parallel_for_compress_function, nworkers);
+    mmap_file_sync(mapped_output_file, encoded_compressed_size);
+
+    } 
     
-    }
 
     return 0;
 }
