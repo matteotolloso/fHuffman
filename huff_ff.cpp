@@ -38,12 +38,12 @@ int main(int argc, char * argv[]) {
     std::fill(counts, counts+nworkers, nullptr);
 
 
-    ff::ParallelForReduce<std::map<char, int>> pfr(nworkers, false, false);
+    ff::ParallelForReduce<std::map<char, int>> pfr(nworkers);
 
 
     auto parallel_for_counts_function = [&](const long start_index, const long stop_index, int thid){
         
-        utimer utimer("parallel_for_counts_function, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        // utimer utimer("parallel_for_counts_function, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
 
         if (counts[thid] == nullptr){
             counts[thid] = new int[CODE_POINTS]();
@@ -57,7 +57,7 @@ int main(int argc, char * argv[]) {
 
     auto parallel_reduce_function = [&](const long start_index, const long stop_index, std::map<char, int>& reduce_counts, const int thid) {
 
-        utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
+        // utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
         
         for (long i = start_index; i < stop_index; i++){
             reduce_counts[i] = 0;
@@ -121,8 +121,7 @@ int main(int argc, char * argv[]) {
 
     auto parallel_for_encode_function = [&](const long start, const long stop, const int thid) {
 
-
-        utimer utimer("parallel_for_encode_function, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
+        // utimer utimer("parallel_for_encode_function, thread " + std::to_string(thid) + " (start_index " + std::to_string(start) + " stop_index " + std::to_string(stop) + ")");
         
         std::deque<bool> * encoding = new std::deque<bool>;
         
@@ -181,8 +180,6 @@ int main(int argc, char * argv[]) {
 
     for (auto ch : encoded_chunks){
         encoded_compressed_size += (std::get<1>(*ch)->size() / 8);
-        std::cout << std::get<1>(*ch)->size() << std::endl;
-        std::cout << std::get<0>(*ch) << std::endl;
     }
 
     mmap_file_write(encoded_filename, encoded_compressed_size, mapped_output_file);
@@ -190,7 +187,7 @@ int main(int argc, char * argv[]) {
 
     auto parallel_for_compress_function = [&](const long index, const int thid) {
 
-        utimer utimer("parallel_for_compress_function, thread " + std::to_string(thid) + " (index " + std::to_string(index) + ")");
+        // utimer utimer("parallel_for_compress_function, thread " + std::to_string(thid));
         
         std::deque<bool>  encoding = *std::get<1>(*encoded_chunks[index]);
         long start_index = std::get<0>(*encoded_chunks[index]);
@@ -203,7 +200,6 @@ int main(int argc, char * argv[]) {
                     byte = byte | 1;
                 }
             }
-            cout<< "thread " << thid << " byte " << byte << " start_index " << start_index << endl;
             mapped_output_file[start_index++] = byte;
         }
     };

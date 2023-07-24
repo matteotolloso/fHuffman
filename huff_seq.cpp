@@ -69,13 +69,16 @@ int main(int argc, char** argv){
 
     }
     
-    // ********** WRITE THE ENCODED FILE **********
+    // ********** COMPRESSING AND WRITING **********
 
-    std::ofstream encoded(encoded_filename);
+
+    long encoded_compressed_size = 0;
+    char * mapped_output_file;
     unsigned short padding = 0;
+    unsigned long write_index = 0;
 
     {
-    utimer utimer("writing encoded file");
+    utimer utimer("compressing and writing");
 
     // make the size of the encoded file a multiple of 8
     while (encoded_contents.size() % 8 != 0) {
@@ -83,6 +86,9 @@ int main(int argc, char** argv){
         padding++;
     }
 
+    encoded_compressed_size = encoded_contents.size() / 8;
+    mmap_file_write(encoded_filename, encoded_compressed_size, mapped_output_file);
+    
     // write the encoded file building one byte each 8 bit
     for (long unsigned i = 0; i < encoded_contents.size(); i += 8) {
         char byte = 0;
@@ -92,10 +98,11 @@ int main(int argc, char** argv){
                 byte = byte | 1;
             }
         }
-        encoded << byte;
+        mapped_output_file[write_index++] = byte;
     }
 
-    encoded.close();
+    mmap_file_sync(mapped_output_file, encoded_compressed_size);
+
     }
 
     return 0;
