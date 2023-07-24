@@ -13,63 +13,25 @@
 
 int main(int argc, char * argv[]) { 
 
-    // argparse::ArgumentParser program("huff_ff");
-
-    // program.add_argument("-i")
-    //     .help("path of the file to encode")
-    //     .default_value("dataset/test.txt")
-    //     .required();
-    
-    // program.add_argument("-o")
-    //     .help("path of the encoded file")
-    //     .default_value("outputs/test.txt")
-    //     .required();
-
-    // program.add_argument("-n")
-    //     .help("number of workers")
-    //     .default_value(4)
-    //     .required();
-    
-
-    // try {
-    //     program.parse_args(argc, argv);    // Example: ./main --color orange
-    // }
-    //     catch (const std::runtime_error& err) {
-    //     std::cerr << err.what() << std::endl;
-    //     std::cerr << program;
-    //     std::exit(1);
-    // }
-
-    // string input_file_path = program.get<string>("-i");
-    // string output_file_path = program.get<string>("-o");
-    // int nworkers = program.get<int>("-n");
-
-
-
-    // std::string original_filename = "./dataset/bigdata.txt";
-    // std::string encoded_filename = "./outputs/test.txt";
-    // int nworkers = 2;
-
-
+  
     std::string original_filename = argv[1];
     std::string encoded_filename = argv[2];
     int nworkers = atoi(argv[3]);
     
     
-    int CHUNKSIZE = 0;
+    int CHUNKSIZE = 0; // static scheduling
 
+
+    // ********** READ THE FILE **********
+    char * mapped_file;
+    mmap_file(original_filename, &mapped_file);
+    long unsigned dataSize = strlen(mapped_file);
+
+
+// ********** COUNT THE CHARACTERS **********
 
     int ** counts = new int*[nworkers]{};
     std::fill(counts, counts+nworkers, nullptr);
-
-    char * mapped_file;
-    mmap_file(original_filename, &mapped_file);
-
-    long unsigned dataSize = strlen(mapped_file);
-    std::cout << "data size: " << dataSize << std::endl;
-
-
-    // ********** PARALLEL FOR REDUCE INITIALIZATION **********
 
 
     ff::ParallelForReduce<std::map<char, int>> pfr(nworkers, false, false);
@@ -149,8 +111,6 @@ int main(int argc, char * argv[]) {
 
 
     // ********** ENCODE THE FILE **********
-
-    // TODO add the reserve to avoid the reallocation
 
 
     std::vector<std::tuple<long, std::vector<bool>* > *> encoded_chunks(nworkers); // (start index if the original file, encoded string)
