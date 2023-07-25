@@ -15,6 +15,7 @@ include_directories(./argparse/include)
 
 add_executable(huff_seq huff_seq.cpp)
 add_executable(huff_ff huff_ff.cpp)
+add_executable(huff_thr huff_thr.cpp)
 
 
 
