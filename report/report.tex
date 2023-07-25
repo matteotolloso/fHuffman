@@ -135,6 +135,15 @@ worker takes a chunk to encode. This part can be really unbalanced if the orgina
 alligned equal character, infact, this character will probability have a short code and the worker 
 that encodes that chunk has to do fewer memory reallocations.
 
+\paragraph*{Synchronization}
+In the FastFlow implementation the syncronization is competely managed by the library. One set of threads
+is spown at the beginning and the runtime support manages the queues and the implicit barriers.
+In the native threads implementation I had to manually managed the syncronization. The easiest way
+would have been to spown and join a set of threads for each stage, each time with the assigned funcion 
+and arguments. This approach would have been really simple but it would have caused a lot of overheads since
+from some tests on the reference machine, the creation and join of a thread takes about $70 \mu s$, while the 
+insertion of a task in a shaerd queue takes about $1 \mu s$ (and the creation of the shared queue takes $4 \mu s$).
+
 
 
 
