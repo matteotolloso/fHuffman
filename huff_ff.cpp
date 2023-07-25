@@ -32,7 +32,7 @@ int main(int argc, char * argv[]) {
     long unsigned dataSize = strlen(mapped_file);
 
 
-// ********** COUNT THE CHARACTERS **********
+    // ********** COUNT THE CHARACTERS **********
 
     int ** counts = new int*[nworkers]{};
     std::fill(counts, counts+nworkers, nullptr);
