@@ -11,13 +11,13 @@
 
 int main(int argc, char * argv[]){
 
-    // std::string original_filename = argv[1];
-    // std::string encoded_filename = argv[2];
-    // int nworkers = atoi(argv[3]);
+    std::string original_filename = argv[1];
+    std::string encoded_filename = argv[2];
+    int nworkers = atoi(argv[3]);
 
-    std::string original_filename = "./dataset/1gb.txt";
-    std::string encoded_filename = "./outputs/test_thr.txt";
-    int nworkers = 2;
+    // std::string original_filename = "./dataset/1gb.txt";
+    // std::string encoded_filename = "./outputs/test_thr.txt";
+    // int nworkers = 2;
 
     
     // ********** PREPARING THE THREADS **********
@@ -131,13 +131,9 @@ int main(int argc, char * argv[]){
 
     auto parallel_for_encode_function = [&](int thid) {
 
-        cout<<"thread "<<thid<<" started"<<endl;
-
         // calculate my start and stop index
         unsigned long long start_index = thid * (dataSize / nworkers);
         unsigned long long stop_index = (thid != (nworkers - 1)) ? (thid + 1) * (dataSize / nworkers) : dataSize;
-
-        cout<<"thread "<<thid<<" start_index "<<start_index<<" stop_index "<<stop_index<<endl;
         
         std::deque<bool> * encoding = new std::deque<bool>;
         
@@ -151,7 +147,6 @@ int main(int argc, char * argv[]){
 
         encoded_chunks[thid] = tuple;
 
-        cout<<"done"<<endl;
     };
 
     {

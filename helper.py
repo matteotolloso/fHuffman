@@ -4,9 +4,9 @@ import random
 import string
 
 def generate_file():
-    with open('dataset/1gb.txt', 'w') as f:
+    with open('dataset/8mb.txt', 'w') as f:
         chars = []
-        for i in range(int(2**30)):
+        for i in range(int(2**24)):
             c = random.choice(string.ascii_letters)  
             chars.append(c)
         f.write(''.join(chars))
