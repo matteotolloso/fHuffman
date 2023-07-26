@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <string>
 
-void mmap_file(std::string filepath,  char ** mapped_file){
+long long unsigned mmap_file(std::string filepath,  char ** mapped_file){
 
     int fd = open(filepath.c_str(), O_RDONLY, 0);
 
@@ -25,7 +25,7 @@ void mmap_file(std::string filepath,  char ** mapped_file){
         exit(EXIT_FAILURE);
     }
 
-    int file_len = statbuf.st_size;
+    long long unsigned file_len = statbuf.st_size;
 
     *mapped_file = (char*) mmap(
         NULL, file_len,
@@ -38,6 +38,8 @@ void mmap_file(std::string filepath,  char ** mapped_file){
         perror("Error mmapping the file");
         exit(EXIT_FAILURE);
     }
+
+    return file_len;
 }
 
 void mmap_file_write(std::string filepath, long file_len, char* &mapped_file ){

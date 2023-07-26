@@ -19,11 +19,11 @@ int main(int argc, char** argv){
     std::string original_filename = argv[1];
     std::string encoded_filename = argv[2];
 
-
     // ********** READ THE FILE **********
+
     char * mapped_file;
-    mmap_file(original_filename, &mapped_file);
-    long unsigned dataSize = strlen(mapped_file);
+    long long dataSize = mmap_file(original_filename, &mapped_file); 
+    std::cout << "dataSize " << dataSize << std::endl;
 
     
     // ********** COUNT THE CHARACTERS **********
@@ -32,7 +32,7 @@ int main(int argc, char** argv){
 
     {
     utimer utimer("counting characters");
-    for (long unsigned i = 0; i < dataSize; i++) {
+    for (long long i = 0; i < dataSize; i++) {
         counts[(int)mapped_file[i]]++;
     }
     }
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
 
     // ********** BUILD THE HUFFMAN TREE **********
 
-    std::map<char, int> counts_map;
+    std::map<char, long long unsigned> counts_map;
     std::vector<std::string> encoder(CODE_POINTS);
     MinHeapNode* decoder;
     {
@@ -61,7 +61,7 @@ int main(int argc, char** argv){
     {
     utimer utimer("encoding file");
 
-    for (long unsigned i = 0; i < dataSize; i++) {
+    for (long long i = 0; i < dataSize; i++) {
         for (char bit : encoder[(int)mapped_file[i]]) {
             encoded_contents.push_back(bit == '1');
         }

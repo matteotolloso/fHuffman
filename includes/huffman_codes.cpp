@@ -8,10 +8,10 @@ using namespace std;
 
 struct MinHeapNode{
     char d;
-    unsigned long frequency;
+    unsigned long long frequency;
     MinHeapNode *lChild, *rChild;
 
-    MinHeapNode(char d, unsigned frequency){
+    MinHeapNode(char d, unsigned long long frequency){
 
         lChild = NULL;
         rChild = NULL;
@@ -38,7 +38,7 @@ void make_encoder(struct MinHeapNode *root, std::vector<string> & encoder, strin
     make_encoder(root->rChild, encoder, str + "1");
 }
 
-void huffman_codes(std::map<char, int> global_counts, std::vector<string> & encoder, MinHeapNode* & decoder){
+void huffman_codes(std::map<char, long long unsigned> global_counts, std::vector<string> & encoder, MinHeapNode* & decoder){
 
     struct MinHeapNode *lChild, *rChild, *top;
 
@@ -69,7 +69,7 @@ void huffman_codes(std::map<char, int> global_counts, std::vector<string> & enco
     decoder = minHeap.top();
 }
 
-void decode(MinHeapNode* root, string s, int &index, string &decoded){
+void decode(MinHeapNode* root, string s, long long unsigned &index, string &decoded){
     if (root == NULL)
         return;
 

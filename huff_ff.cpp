@@ -27,9 +27,10 @@ int main(int argc, char * argv[]) {
 
 
     // ********** READ THE FILE **********
+
     char * mapped_file;
-    mmap_file(original_filename, &mapped_file);
-    long unsigned dataSize = strlen(mapped_file);
+    long long dataSize = mmap_file(original_filename, &mapped_file); 
+    std::cout << "dataSize " << dataSize << std::endl;
 
 
     // ********** COUNT THE CHARACTERS **********
@@ -38,10 +39,10 @@ int main(int argc, char * argv[]) {
     std::fill(counts, counts+nworkers, nullptr);
 
 
-    ff::ParallelForReduce<std::map<char, int>> pfr(nworkers);
+    ff::ParallelForReduce<std::map<char, long long unsigned>> pfr(nworkers);
 
 
-    auto parallel_for_counts_function = [&](const long start_index, const long stop_index, int thid){
+    auto parallel_for_counts_function = [&](const long long unsigned start_index, const long long unsigned stop_index, int thid){
         
         // utimer utimer("parallel_for_counts_function, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
 
@@ -49,34 +50,32 @@ int main(int argc, char * argv[]) {
             counts[thid] = new int[CODE_POINTS]();
         }
 
-        for (long i = start_index; i < stop_index; i++){
+        for (long long unsigned i = start_index; i < stop_index; i++){
             counts[thid][ (int) mapped_file[i]]++;
         }
     };
     
 
-    auto parallel_reduce_function = [&](const long start_index, const long stop_index, std::map<char, int>& reduce_counts, const int thid) {
+    auto parallel_reduce_function = [&](const long long unsigned  start_index, const long long unsigned stop_index, std::map<char, long long unsigned >& reduce_counts, const int thid) {
 
         // utimer utimer("parallel reduce counts, thread " + std::to_string(thid) + " (start_index " + std::to_string(start_index) + " stop_index " + std::to_string(stop_index) + ")");
         
-        for (long i = start_index; i < stop_index; i++){
+        for (long long unsigned i = start_index; i < stop_index; i++){
             reduce_counts[i] = 0;
         }
 
         // iterate fixing first the mapper worker (the array that produced) and then the char chunk
         // for cache efficiency
         for (int j = 0; j < nworkers; j++){  // iterate all the partial computations (mapper threads)
-            if (counts[j] != nullptr){  // since the scheduling is dynamic, some threads may not have ever started
-                for (long i = start_index; i < stop_index; i++){   // assigned char chunk
-                    reduce_counts[i] += counts[j][i]; // only this thread is wrinting on reduce counts becouse is local
-                }    
-            }
+            for (long long unsigned i = start_index; i < stop_index; i++){   // assigned char chunk
+                reduce_counts[i] += counts[j][i]; // only this thread is wrinting on reduce counts becouse is local
+            }    
         } 
     };
 
-    std::map<char, int> global_counts;
+    std::map<char, long long unsigned> global_counts;
 
-    auto sequential_reduce_function = [](std::map<char, int>& v, const std::map<char, int>& elem) {
+    auto sequential_reduce_function = [](std::map<char, long long unsigned>& v, const std::map<char, long long unsigned>& elem) {
         
         // utimer utimer("sequential reduce counts");
         
@@ -93,7 +92,7 @@ int main(int argc, char * argv[]) {
     pfr.parallel_for_idx(0, dataSize, 1 ,CHUNKSIZE, parallel_for_counts_function, nworkers);
     
     pfr.parallel_reduce_idx(
-        global_counts, std::map<char, int>(),
+        global_counts, std::map<char, long long unsigned>(),
         0, CODE_POINTS, 1, CHUNKSIZE,
         parallel_reduce_function, 
         sequential_reduce_function,
@@ -116,7 +115,6 @@ int main(int argc, char * argv[]) {
 
     // ********** ENCODE THE FILE **********
 
-    // TODO avoid the sort assigning each thread a chunk of the file
     std::vector<std::tuple<long, std::deque<bool>* > *> encoded_chunks(nworkers); // (start index if the original file, encoded string)
 
     auto parallel_for_encode_function = [&](const long start, const long stop, const int thid) {
@@ -131,7 +129,7 @@ int main(int argc, char * argv[]) {
             }
         }
 
-        std::tuple<long, std::deque<bool>* > * tuple = new std::tuple<long, std::deque<bool>* >(start, encoding);
+        std::tuple<long, std::deque<bool>* > * tuple = new std::tuple<long, std::deque<bool>* >(0, encoding);
 
         encoded_chunks[thid] = tuple;
     };
@@ -140,13 +138,6 @@ int main(int argc, char * argv[]) {
     {
     utimer utimer("encoding file");
     pfr.parallel_for_idx(0, dataSize, 1, CHUNKSIZE, parallel_for_encode_function, nworkers);
-    std::sort(
-        encoded_chunks.begin(), 
-        encoded_chunks.end(), 
-        [](const std::tuple<long, std::deque<bool>* > * a, const std::tuple<long, std::deque<bool>* > * b) -> bool { 
-            return (std::get<0>(*a) < std::get<0>(*b)); 
-        }
-    );
     }
 
     // ********** BALANCING ENCODING **********
@@ -163,6 +154,7 @@ int main(int argc, char * argv[]) {
             std::get<1>(*(encoded_chunks[i+1]))->pop_front();
         }
         // update the start index of the next chunk with the byte size it has to start from
+        // so they can by written in parallel
         std::get<0>(*encoded_chunks[i+1]) = std::get<0>(*encoded_chunks[i]) + (std::get<1>(*encoded_chunks[i])->size() / 8);
     }
 
@@ -173,6 +165,7 @@ int main(int argc, char * argv[]) {
     }
 
     }
+    
     // ********** COMPRESSING AND WRITING **********
 
     long encoded_compressed_size = 0;
