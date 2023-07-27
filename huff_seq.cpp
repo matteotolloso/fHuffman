@@ -15,23 +15,21 @@
 
 int main(int argc, char** argv){
 
+    utimer tt("total time");
 
     std::string original_filename = argv[1];
     std::string encoded_filename = argv[2];
 
-    // ********** READ THE FILE **********
-
+    
+    // ********** READ AND COUNT **********
+    
     char * mapped_file;
     long long dataSize = mmap_file(original_filename, &mapped_file); 
-    std::cout << "dataSize " << dataSize << std::endl;
-
-    
-    // ********** COUNT THE CHARACTERS **********
 
     int * counts = new int[CODE_POINTS]{};
 
     {
-    utimer utimer("counting characters");
+    utimer utimer("read and count");
     for (long long i = 0; i < dataSize; i++) {
         counts[(int)mapped_file[i]]++;
     }

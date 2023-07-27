@@ -1,5 +1,7 @@
-IN_FILE="./dataset/1gb.txt"
-N_THREADS=1
+#!/bin/bash
+
+IN_FILE="./dataset/128mb.txt"
+N_THREADS=32
 
 
 echo -e "\nTest with native threads\n" &&

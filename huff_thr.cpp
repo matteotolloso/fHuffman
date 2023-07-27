@@ -9,7 +9,10 @@
 
 #define CODE_POINTS 128
 
-int main(int argc, char * argv[]){
+int main(int argc, char * argv[]){    
+
+    utimer tt("total time");
+
 
     std::string original_filename = argv[1];
     std::string encoded_filename = argv[2];
@@ -26,6 +29,7 @@ int main(int argc, char * argv[]){
     std::barrier barrier(nworkers + 1);
     std::vector<std::thread> workers;
 
+
     auto worker_function = [&] (int thid){
         while (true){
             std::optional<std::function<void(int)>> function = task_queue.pop();
@@ -39,21 +43,24 @@ int main(int argc, char * argv[]){
         }
     };
 
+    {
+    utimer utimer("preparing threads");
+
     for (int i = 0; i < nworkers; i++){
         workers.push_back(std::thread(worker_function, i));
     }
+    }
     
 
-    // ********** READ THE FILE **********
+    
+    // ********** READ AND COUNT **********
 
     char * mapped_file;
     long long unsigned dataSize = mmap_file(original_filename, &mapped_file); 
-    
-    // ********** COUNT THE CHARACTERS **********
 
     int ** counts = new int*[nworkers]{};
     std::fill(counts, counts+nworkers, nullptr);
-    std::vector<std::map<char, long long unsigned>>reduce_counts(nworkers);
+    std::vector<std::map<char, long long unsigned> *>reduce_counts(nworkers);
     std::map<char, long long unsigned> global_counts;
 
     auto parallel_for_counts_function = [&] (int thid){
@@ -81,20 +88,22 @@ int main(int argc, char * argv[]){
         long long unsigned start_index = thid * (CODE_POINTS / nworkers);
         long long unsigned stop_index = (thid != (nworkers - 1)) ? (thid + 1) * (CODE_POINTS / nworkers) : CODE_POINTS;
 
+        reduce_counts[thid] = new std::map<char, long long unsigned>;
+
         for (long long unsigned i = start_index; i < stop_index; i++){
-            reduce_counts[thid][i] = 0;
+            (*reduce_counts[thid])[i] = 0;
         }
 
         for (int i = 0; i < nworkers; i++){
             for (long long unsigned j = start_index; j < stop_index; j++){
-                reduce_counts[thid][j] += counts[i][j];
+                (*reduce_counts[thid])[j] += counts[i][j];
             }
         }
     };
 
 
     {
-    utimer utimer("counting characters");
+    utimer utimer("read and count");
 
     for (int i = 0; i < nworkers; i++){
         task_queue.push(std::optional<std::function<void(int)>>{parallel_for_counts_function});
@@ -107,7 +116,7 @@ int main(int argc, char * argv[]){
     barrier.arrive_and_wait();
 
     for (int i = 0; i < nworkers; i++){
-        for (auto it = reduce_counts[i].begin(); it != reduce_counts[i].end(); it++){
+        for (auto it = reduce_counts[i]->begin(); it != reduce_counts[i]->end(); it++){
             global_counts[it->first] = it->second;
         }
     }
@@ -162,6 +171,7 @@ int main(int argc, char * argv[]){
     // ********** BALANCING ENCODING **********
 
     int padding = 0;
+    long long unsigned encoded_compressed_size = 0;
 
     {
     utimer utimer("balancing encoding");
@@ -182,18 +192,14 @@ int main(int argc, char * argv[]){
         std::get<1>(*encoded_chunks[encoded_chunks.size()-1])->push_back(false);
         padding++;
     }
+    encoded_compressed_size = std::get<0>(*encoded_chunks[encoded_chunks.size()-1]) + (std::get<1>(*encoded_chunks[encoded_chunks.size()-1])->size() / 8);
 
     }
 
 
     // ********** COMPRESSING AND WRITING **********
 
-    long long unsigned encoded_compressed_size = 0;
     char * mapped_output_file;
-
-    for (auto ch : encoded_chunks){
-        encoded_compressed_size += (std::get<1>(*ch)->size() / 8);
-    }
 
     mmap_file_write(encoded_filename, encoded_compressed_size, mapped_output_file);
 

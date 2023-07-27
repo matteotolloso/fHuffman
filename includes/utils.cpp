@@ -44,8 +44,6 @@ long long unsigned mmap_file(std::string filepath,  char ** mapped_file){
 
 void mmap_file_write(std::string filepath, long file_len, char* &mapped_file ){
 
-    utimer utimer("mmap file write");
-
     int fd = open(filepath.c_str(), O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); 
 
     if (fd == -1){

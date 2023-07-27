@@ -1,0 +1,70 @@
+preparing threads computed in            1529 usec 
+read and count computed in          147673 usec 
+huffman encoder and decoder creation computed in             197 usec 
+encoding file computed in         1357060 usec 
+balancing encoding computed in              27 usec 
+compressing and writing computed in         2765594 usec 
+total time computed in         4425740 usec 
+preparing threads computed in            1315 usec 
+read and count computed in          146444 usec 
+huffman encoder and decoder creation computed in              98 usec 
+encoding file computed in         1322189 usec 
+balancing encoding computed in              25 usec 
+compressing and writing computed in         2801178 usec 
+total time computed in         4423575 usec 
+preparing threads computed in            1401 usec 
+read and count computed in          137391 usec 
+huffman encoder and decoder creation computed in              85 usec 
+encoding file computed in         1328721 usec 
+balancing encoding computed in              27 usec 
+compressing and writing computed in         2862044 usec 
+total time computed in         4478878 usec 
+preparing threads computed in            1538 usec 
+read and count computed in          135602 usec 
+huffman encoder and decoder creation computed in              86 usec 
+encoding file computed in         1349808 usec 
+balancing encoding computed in              34 usec 
+compressing and writing computed in         2840490 usec 
+total time computed in         4471789 usec 
+preparing threads computed in            1406 usec 
+read and count computed in          156865 usec 
+huffman encoder and decoder creation computed in              84 usec 
+encoding file computed in         1336449 usec 
+balancing encoding computed in              27 usec 
+compressing and writing computed in         2928333 usec 
+total time computed in         4576626 usec 
+preparing threads computed in            1389 usec 
+read and count computed in          135207 usec 
+huffman encoder and decoder creation computed in             131 usec 
+encoding file computed in         1353922 usec 
+balancing encoding computed in              42 usec 
+compressing and writing computed in         2648177 usec 
+total time computed in         4296495 usec 
+preparing threads computed in            1493 usec 
+read and count computed in          124739 usec 
+huffman encoder and decoder creation computed in             118 usec 
+encoding file computed in         1328973 usec 
+balancing encoding computed in              28 usec 
+compressing and writing computed in         2524894 usec 
+total time computed in         4122922 usec 
+preparing threads computed in            1517 usec 
+read and count computed in          133415 usec 
+huffman encoder and decoder creation computed in              82 usec 
+encoding file computed in         1291962 usec 
+balancing encoding computed in              30 usec 
+compressing and writing computed in         2533803 usec 
+total time computed in         4099474 usec 
+preparing threads computed in            1584 usec 
+read and count computed in          147480 usec 
+huffman encoder and decoder creation computed in              84 usec 
+encoding file computed in         1310741 usec 
+balancing encoding computed in              30 usec 
+compressing and writing computed in         2506453 usec 
+total time computed in         4118256 usec 
+preparing threads computed in            1397 usec 
+read and count computed in          132008 usec 
+huffman encoder and decoder creation computed in              81 usec 
+encoding file computed in         1331715 usec 
+balancing encoding computed in              39 usec 
+compressing and writing computed in         2567377 usec 
+total time computed in         4195329 usec 

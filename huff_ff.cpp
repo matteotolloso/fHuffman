@@ -13,27 +13,19 @@
 
 int main(int argc, char * argv[]) { 
 
+    utimer tt("total time");
   
     std::string original_filename = argv[1];
     std::string encoded_filename = argv[2];
     int nworkers = atoi(argv[3]);
 
-    // std::string original_filename = "./dataset/test.txt";
-    // std::string encoded_filename = "./outputs/huff_ff.txt";
-    // int nworkers = 2;
-    
-    
     int CHUNKSIZE = 0; // static scheduling
 
 
-    // ********** READ THE FILE **********
+    // ********** READ AND COUNT **********
 
     char * mapped_file;
     long long dataSize = mmap_file(original_filename, &mapped_file); 
-    std::cout << "dataSize " << dataSize << std::endl;
-
-
-    // ********** COUNT THE CHARACTERS **********
 
     int ** counts = new int*[nworkers]{};
     std::fill(counts, counts+nworkers, nullptr);
@@ -87,7 +79,7 @@ int main(int argc, char * argv[]) {
 
 
     {
-    utimer utimer("counting characters");
+    utimer utimer("read and count");
 
     pfr.parallel_for_idx(0, dataSize, 1 ,CHUNKSIZE, parallel_for_counts_function, nworkers);
     
@@ -143,6 +135,7 @@ int main(int argc, char * argv[]) {
     // ********** BALANCING ENCODING **********
 
     int padding = 0;
+    long encoded_compressed_size = 0;
 
     {
     utimer utimer("balancing encoding");
@@ -164,16 +157,13 @@ int main(int argc, char * argv[]) {
         padding++;
     }
 
+    encoded_compressed_size = std::get<0>(*encoded_chunks[encoded_chunks.size()-1]) + (std::get<1>(*encoded_chunks[encoded_chunks.size()-1])->size() / 8);
+
     }
     
     // ********** COMPRESSING AND WRITING **********
 
-    long encoded_compressed_size = 0;
     char * mapped_output_file;
-
-    for (auto ch : encoded_chunks){
-        encoded_compressed_size += (std::get<1>(*ch)->size() / 8);
-    }
 
     mmap_file_write(encoded_filename, encoded_compressed_size, mapped_output_file);
 
