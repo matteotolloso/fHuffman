@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  25 JUL 2023 12:58
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  27 JUL 2023 18:08
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -373,24 +373,34 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 
 ]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 74.
+(Font)              <12> on input line 69.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 74.
+(Font)              <8> on input line 69.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 74.
- [2] [3] [4]
+(Font)              <6> on input line 69.
+ [2] [3]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[4] [5]
 No file report.bbl.
 (./report.aux)
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 1F5EE4F9C60516F03199F9F2EAE3AE94;1118.
+(rerunfilecheck)             Checksum: 0CB85482645946102F003B9A996D506D;1045.
  ) 
 Here is how much of TeX's memory you used:
- 10433 strings out of 478190
- 173313 string characters out of 5854827
- 475110 words of memory out of 5000000
- 30904 multiletter control sequences out of 15000+600000
- 473356 words of font info for 52 fonts, out of 8000000 for 9000
+ 10444 strings out of 478190
+ 173503 string characters out of 5854827
+ 480495 words of memory out of 5000000
+ 30914 multiletter control sequences out of 15000+600000
+ 473364 words of font info for 53 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 67i,7n,77p,297b,386s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 67i,8n,77p,805b,348s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on report.pdf (4 pages).
+Output written on report.pdf (5 pages).

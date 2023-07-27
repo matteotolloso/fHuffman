@@ -61,53 +61,43 @@ To build the optimal code for a specific text we have to:
     \item encode the file.
 \end{enumerate}
 
-\section{Theoretical analysis}
+\section{Overview}
 
-We are facing a problem that can be divided in three stages. In particular it is a \textit{data parallel} task, 
-since we have all input available at the beginning of the computation.
+We are facing a problem that can be divided in three stages. In particular it is a \textit{data parallel} task, since we have all input available at the beginning of the computation.
 
 \subsection{Counting the number of occurences}
-As stated above, the first stage is a counting one. This is clearly a \textit{map-reduce} operation.
+As stated above, the first stage is a counting one. The asymptotic sequential complexity of this part is $\theta(m)$ where $m$ is the number of characters in the file.
+From a parallel/distributer point of view this is clearly a \textit{map-reduce} operation.
 
 \paragraph*{Map}
-The \textit{map} part can be execute in parallel dividing the file into chunks, the workers count the occurences 
-in a chunk of the file. The asymptotic sequential complexity of this part is $\theta(m)$ where $m$ is the number of characters in the file.
+The \textit{Map} part can be execute in parallel dividing the file into chunks, the workers count the occurences in a chunk of the file. 
+This operation has to deal with the disk. If we consider the reading of the disk as a sequential operation things became more difficult because it's no longer a data parallel problem but a stream parallel one. In this setting we can describe the process as \texttt{pipe}($reading$, \texttt{farm}($counting$, $nw$)), the completion time of this process is the time needed to read the file from the disk, under the assumption that the farm has the right number of workers not to be the bottleneck of the operation. This approach is the one that minimize both the completion time and the number of workers but it it cause a lot of comunication overhead, needs some tuning of the chunksize to send and of the scheduler's policy and is in general more complex to implement.
 
-This operation has to deal with the disk. Under the following assumptions:
-\begin{itemize}
-    \item the reading of a chunk from  the disk is slower than the counting operation of that chunk;
-    \item the readings are sequential;
-\end{itemize}
-it seems useless to parallelize this phase, since the disk is the bottleneck of the operation.
-The minimum completion time could be achived with two workers in pipeline, one reading and one counting.
+If we instead consider the reading of the disk as a datata parallel operation that consists in moving data from the disk to the main memory, we can use the $Map\ Fusion$ theorem and transform the program in \texttt{map}($read-count$, $nw$). This solution minimize the communication overhead, the completion time and the complexity of the implementation.
 
-Nevertheless, the tests that i did mapping the file in main memory and reading it with multiple threads, showed that the parallelization
-actually improves the performance. This is probably due to how the SSD works and the caching syestems. Furthermore, the 
-counting operation seems to be slower than the disk speed. Quantitative results 
-are shown in section \ref{sec:results} .
+
+Furthermore, the tests that i did mapping the file in main memory and reading it with multiple threads, showed that the parallelization
+also improves the performance of the read operation. This is probably due to how the SSD works and the caching syestems. 
 
 \paragraph*{Reduce}
-The \textit{reduce} operation can again be executed in parallel, this 
-time each reducer takes a subset of the alphabet and sums the occurences of each character in that subset. The sequential
-asymptotic complexity is constant since depends only of he number of different character. However, from a parallel point of view, this operation 
-has a complexity that depeds on the number of chunks the file was divided into in the \textit{map} phase (that can be different from the number of
-mapper workers), because the reducers have to sum the assigned characters along all the chunks. So if $c$ is the number of chunks and $A$ the number
-of different symbols (128), the complexity of the \textit{reduce} phase is $\theta(c \times A)$.
+After the \textit{Map} operiation we end up with a number of counts vectors equal to the number of chunks the file was divided into (that in our case is equal to the number of workers). The \textit{Reduce} operation is again a parallel one, this time each reducer takes a subset of the alphabet and sums the occurences of each character in that subset. It's useless to have a number of workers greater than the number of different characters in the file.
 
 \subsection{Building the binary tree}
 The second stage is the building of the binary tree. This is a more difficult operation to parallelize since 
 most of the operations are sequential. Furthermore, the complexity of this stage is $\theta(A \times log (A))$  where 
-$A$ is the number of differtent symbols (128), so basically it is a constant in our case.
+$A$ is the number of differtent symbols (128), so basically it is a constant in our case. Tests showed that the time needed for this stage is competely negligible with respect to the other stages.
 
 \subsection{Encoding the file}
-The last stage is the encoding of the file. This is a \textit{map} operation, since each character has to be replaced with its code.
-Unfortunately, the lenght of the final text can only be known after each character has been encoded (because the encoding of each character
-has a different lenght), so the actual writing needs a step of syncronization. The sequential complexity of this stage is $\theta(m)$ where $m$ is 
-the number of characters in the file.
+The last stage is the encoding of the file. This is a \textit{Map} operation, since each character has to be replaced with its code and writed on the disk. We can make a similar reasoning as the one made for the counting stage about the $Map\ Fusion$ theorem.
 
-We can make a similar reasoning as the one made for the \textit{map} phase of the counting stage. The disk could be the bottleneck of the operation.
-If we divide the file in chunks and we encode in parallel each of them, we end up with a set of encoded chunks that have to be sorted and summed to 
-get the total lenght before writing (if we want to write them in parallel). This operation has a complexity of $\theta(c \times log(c))$ where $c$ is the number of chunks.
+Unfortunately, the lenght of the final text can only be known after each character has been encoded (because the encoding of each character
+has a different lenght), so the actual writing needs a step of syncronization. I solved this problem dividing this stage in thread parts:
+\begin{enumerate}
+    \item \textit{encoding}: each worker encodes a chunk of the file.
+    \item \textit{balancing}: the encoded chunks sizes are made multiple of 8 and the the index where the writing should start is computed. This is a sequential syncronization step but the time needed is negligible.
+    \item \textit{compressing and writing}: each worker takes a chunk of the encoded file and writes it on the disk groping the bits in bytes.
+\end{enumerate}
+It's fundamental to notice that the \textit{balancing} step makes the encoded chunks independent one from another, so the \textit{compressing and writing} can became a parallel operation.
 
 
 \section{Implementation}
@@ -147,7 +137,81 @@ insertion of a task in a shaerd queue takes about $1 \mu s$ (and the creation of
 
 
 
-\section{Results \label{sec:results}}
+\section{Tests \label{sec:tests}}
+
+The table \ref{tab:sequential_times} shows the time of the various stages of the sequential implementation. The great part of the time is spent on the encoding, compressing and writing phases.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{l c}
+    \textbf{Stage} & \textbf{Time}  \\
+    \hline
+    read and count & 3216762.6 (3.2 s)\\
+    \hline
+    huffman & 102.6 (0.000102 s)\\
+    \hline
+    encoding & 22609779.1 (22.6 s)  \\
+    \hline
+    compressing and writing & 14332681.3 (14.3 s) \\
+    \hline
+    \textbf{Total} & 40000211 (40 s)\\ 
+\end{tabular}
+\caption{Sequential times in usec for 1GB file of random characters. Averaged over 10 runs.}
+\label{tab:sequential_times}
+\end{center}
+\end{table}
+
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{l c c}
+    \textbf{Stage} & \textbf{Time} & \textbf{Speedup} \\
+    \hline
+    read and count & 107107.8 (0.1 s) & 30.02 x \\
+    \hline
+    huffman & 77 (0.000077 s) &  \\
+    \hline
+    encoding & 1257014 (1.3 s) &  17.99 x\\
+    \hline
+    balancing & 28,7 (0.000028 s) \\
+    \hline
+    compressing and writing & 2582697.7 (2.5 s) & 5.55 x \\
+    \hline
+    \textbf{Total} & 4760915,7 (4.8 s)  & 8.40 x\\ 
+\end{tabular}
+\caption{Parallel times with FastFlow implementation, in usec, for 1GB file of random characters on a 32 physical core machine. Averaged over 10 runs.}
+\label{tab:ff_times}
+\end{center}
+\end{table}
+
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{l c c}
+    \textbf{Stage} & \textbf{Time} & \textbf{Speedup}  \\
+    \hline
+    read and count & 148591,3 (1.4 s) & 21.64 x\\
+    \hline
+    huffman & 95.7 (0.000095 s) \\
+    \hline
+    encoding & 1333768  (1.3 s) & 16.95 x \\
+    \hline
+    balancing & 27.2 (0.000027 s)\\
+    \hline
+    compressing and writing & 2867285.9  (2.8 s) & 4.99 x\\
+    \hline
+    \textbf{Total} & 4504757,6 (4.5 s) & 8.87 x\\ 
+\end{tabular}
+\caption{Parallel times with native threads implementation, in usec, for 1GB file of random characters on a 32 physical core machine. Averaged over 10 runs.}    
+\label{tab:thr_times}
+\end{center}
+\end{table}
+
+In tables \ref{tab:ff_times} and \ref{tab:thr_times} we can see some measures of the FastFlow implementation and the native threads one. The total do not correspont to the sum of the single stages because they didn't take into account the initialization of the memory and the stuctures needed. The stages measureas refers only to the actual computation while the "total" refers to the time from the start of the program to the end.
+
+
+
+
 
 
 
