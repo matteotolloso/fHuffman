@@ -54,7 +54,7 @@ int main(int argc, char** argv){
 
     // ********** ENCODE THE FILE **********
     
-    std::vector<bool> encoded_contents;
+    std::deque<bool> encoded_contents;
     
     {
     utimer utimer("encoding file");

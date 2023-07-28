@@ -1,0 +1,50 @@
+read and count computed in         3219794 usec 
+huffman encoder and decoder creation computed in              86 usec 
+encoding file computed in        25367039 usec 
+compressing and writing computed in        39853779 usec 
+total time computed in        69221433 usec 
+read and count computed in         3231855 usec 
+huffman encoder and decoder creation computed in              86 usec 
+encoding file computed in        25439950 usec 
+compressing and writing computed in        39830788 usec 
+total time computed in        69281271 usec 
+read and count computed in         3222669 usec 
+huffman encoder and decoder creation computed in              86 usec 
+encoding file computed in        25297482 usec 
+compressing and writing computed in        39775103 usec 
+total time computed in        69063521 usec 
+read and count computed in         3226696 usec 
+huffman encoder and decoder creation computed in              87 usec 
+encoding file computed in        25300432 usec 
+compressing and writing computed in        39784441 usec 
+total time computed in        69078198 usec 
+read and count computed in         3230940 usec 
+huffman encoder and decoder creation computed in              94 usec 
+encoding file computed in        25276288 usec 
+compressing and writing computed in        39707946 usec 
+total time computed in        68969846 usec 
+read and count computed in         3228048 usec 
+huffman encoder and decoder creation computed in              89 usec 
+encoding file computed in        25247946 usec 
+compressing and writing computed in        39628539 usec 
+total time computed in        68778403 usec 
+read and count computed in         3226755 usec 
+huffman encoder and decoder creation computed in              83 usec 
+encoding file computed in        25266430 usec 
+compressing and writing computed in        39704829 usec 
+total time computed in        68980308 usec 
+read and count computed in         3224886 usec 
+huffman encoder and decoder creation computed in              93 usec 
+encoding file computed in        25313671 usec 
+compressing and writing computed in        39701913 usec 
+total time computed in        69011326 usec 
+read and count computed in         3231328 usec 
+huffman encoder and decoder creation computed in              84 usec 
+encoding file computed in        25422195 usec 
+compressing and writing computed in        39760719 usec 
+total time computed in        69187620 usec 
+read and count computed in         3227773 usec 
+huffman encoder and decoder creation computed in              85 usec 
+encoding file computed in        25370542 usec 
+compressing and writing computed in        39598485 usec 
+total time computed in        68965550 usec 
