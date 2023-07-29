@@ -24,13 +24,13 @@ int main(int argc, char** argv){
     // ********** READ AND COUNT **********
     
     char * mapped_file;
-    long long dataSize = mmap_file(original_filename, &mapped_file); 
+    long long unsigned dataSize = mmap_file(original_filename, &mapped_file); 
 
     int * counts = new int[CODE_POINTS]{};
 
     {
     utimer utimer("read and count");
-    for (long long i = 0; i < dataSize; i++) {
+    for (long long unsigned i = 0; i < dataSize; i++) {
         counts[(int)mapped_file[i]]++;
     }
     }
@@ -59,7 +59,7 @@ int main(int argc, char** argv){
     {
     utimer utimer("encoding file");
 
-    for (long long i = 0; i < dataSize; i++) {
+    for (unsigned long long i = 0; i < dataSize; i++) {
         for (char bit : encoder[(int)mapped_file[i]]) {
             encoded_contents.push_back(bit == '1');
         }
