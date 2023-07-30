@@ -211,6 +211,42 @@ In tables \ref{tab:ff_times} and \ref{tab:thr_times} we can see some measures of
 
 The ``read and count" stage has a great speedup, in particular the application API of FastFlow allows an almost linear speedup in this operation and more in general the speedup of the actual computation is always better with FastFlow than with the native threads implementation. If we instead consider the total speedup, threads are slightly better probably due to less overhead in the management. The ``compress and write" stage has the worst speedup because it involves writing on disk. The ``encoding'' phase is independet from the disk and I expected a better speedup. Probably the overhead is caused by the memory reallocation needed to store the encoded characters, ence a competition to access the heap despite the use of the jemalloc library. Even allocate a lot of memory at the beginnig is not a solution because the threads will compete the same. One possible solution could be switch to arena mode immediately but it is ouside my control.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{./images/time_to_complete.png}
+    \caption{Time for encoding of a 8GB file of random characters. Averaged over 10 runs.}
+    \label{fig:time_to_complete}
+\end{figure}
+
+In the figure \ref{fig:time_to_complete} the completion time of the two parallel implementation is compared. The FastFlow result is quite surprising because it achieves the minimum time with only 16 threads, and starts to worsen the performance increasing the parallel degree. A similar behaviour can be observed with the native thread, wehere is not worth to increase the number of threads over 28. The same results can be seen under a differen prospective in the efficiency plot, figure \ref{fig:efficiency}. I suspect that the great efficiency of FastFlow with 16 cores is correlated with the architecture of the machine used for the experiments.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{./images/efficiency.png}
+    \caption{Efficiency in the encoding of a 8GB file of random characters. Averaged over 10 runs.}
+    \label{fig:efficiency}
+\end{figure}
+
+From the figure \ref{fig:efficiency} we can also observe that the efficiency is greater than one. This can happen when the speedup is greater than the parallel degree because the original problem became much easier when it is divided into subproblems. It might be that allocate and work a single 8 GB block is much slower than allocate 32 different 256 MB blocks, especially with the optimizations made by the jemalloc library and FastFlow. For example could happen that the sequential process allocates the memory on the RAM bank attached to the curren core and then is moved to another core or even anoter socket causing a lot of delay in accessing memory; in the parallel process is more likely that each tread allocate the memorory on the nearest RAM bank and then remains pinned to the same core.
+
+Of course these are only hypothesis difficult to verify, however the test reported in table \ref{tab:jemalloc} shows how important is the use of the jemalloc library for these implementations, expecially with FastFlow, that suffers by an order of magnitude the unoptimized standart library. This could partially explain the superlinear speedup observed before.
+
+
+\begin{table}[h]
+    \begin{center}
+    \begin{tabular}{c c c c}
+        & \textbf{malloc} & \textbf{jemalloc} & speedup\\
+        \hline
+        \textbf{threads} &  169339515 (196 s) & 33328868 (33.3 s) & 5.08 x \\
+        \hline
+        \textbf{FastFlow} &  414727131 (415 s) & 36295647 (36.2 s) & 11.42 x \\
+        \hline
+    \end{tabular}
+    \caption{Time to encode a 8GB file of random characters, in usec. Standart malloc library vs jemalloc. 32 physical core machine. Averaged over 10 runs. The term ``speedup'' here has a different meaning than the usual one: it is the ratio between the time with the standart library and the time with jemalloc.}    
+    \label{tab:jemalloc}
+    \end{center}
+    \end{table}
 
 
 
