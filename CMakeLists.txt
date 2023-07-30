@@ -13,9 +13,9 @@ include_directories(./fastflow)
 include_directories(./argparse/include)
 
 
-add_executable(huff_seq huff_seq.cpp)
-add_executable(huff_ff huff_ff.cpp)
-add_executable(huff_thr huff_thr.cpp)
+add_executable(huff_seq ./src/huff_seq.cpp)
+add_executable(huff_ff ./src/huff_ff.cpp)
+add_executable(huff_thr ./src/huff_thr.cpp)
 
 
 
