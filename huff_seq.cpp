@@ -13,7 +13,7 @@
 
 
 
-int main(int argc, char** argv){
+int main(int argc, char* argv[]){
 
     utimer tt("total time");
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv){
     // ********** BUILD THE HUFFMAN TREE **********
 
     std::map<char, long long unsigned> counts_map;
-    std::vector<std::string> encoder(CODE_POINTS);
+    std::vector<string> encoder(CODE_POINTS);
     MinHeapNode* decoder;
     {
     utimer utimer("huffman encoder and decoder creation"); 
@@ -54,14 +54,14 @@ int main(int argc, char** argv){
 
     // ********** ENCODE THE FILE **********
     
-    std::deque<bool> encoded_contents;
+    std::deque<bool>* encoded_contents = new std::deque<bool>;
     
     {
     utimer utimer("encoding file");
 
     for (unsigned long long i = 0; i < dataSize; i++) {
         for (char bit : encoder[(int)mapped_file[i]]) {
-            encoded_contents.push_back(bit == '1');
+            encoded_contents->push_back(bit == '1');
         }
     }
 
@@ -79,20 +79,20 @@ int main(int argc, char** argv){
     utimer utimer("compressing and writing");
 
     // make the size of the encoded file a multiple of 8
-    while (encoded_contents.size() % 8 != 0) {
-        encoded_contents.push_back(false);
+    while (encoded_contents->size() % 8 != 0) {
+        encoded_contents->push_back(false);
         padding++;
     }
 
-    encoded_compressed_size = encoded_contents.size() / 8;
+    encoded_compressed_size = encoded_contents->size() / 8;
     mmap_file_write(encoded_filename, encoded_compressed_size, mapped_output_file);
     
     // write the encoded file building one byte each 8 bit
-    for (long unsigned i = 0; i < encoded_contents.size(); i += 8) {
+    for (long long unsigned i = 0; i < encoded_contents->size(); i += 8) {
         char byte = 0;
         for (int j = 0; j < 8; j++) {
             byte = byte << 1;
-            if (encoded_contents[i + j]) {
+            if ((*encoded_contents)[i + j]) {
                 byte = byte | 1;
             }
         }
