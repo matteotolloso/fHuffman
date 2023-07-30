@@ -1,7 +1,7 @@
 #!/bin/bash
 
 IN_FILE="./dataset/8mb.txt"
-N_THREADS=1
+N_THREADS=32
 
 cd build && make && cd .. &&
 

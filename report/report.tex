@@ -210,7 +210,7 @@ The \textit{read and count} stage has a great speedup, in particular the applica
 \begin{figure}
     \centering
     \includegraphics[width=0.7\textwidth]{./images/time_to_complete.png}
-    \caption{Time for encoding of a 8GB file of random characters. Averaged over 10 runs.}
+    \caption{Time for encoding of a 8GB file of random characters, in seconds. Averaged over 10 runs.}
     \label{fig:time_to_complete}
 \end{figure}
 
@@ -239,10 +239,17 @@ Of course these are only hypothesis difficult to verify, however the test report
         \textbf{FastFlow} &  415 s  (414727131 $\mu s$) & 36.2 s (36295647 $\mu s$ ) & 11.42 x \\
         \hline
     \end{tabular}
-    \caption{Time to encode a 8GB file of random characters. Standart malloc library vs jemalloc. 32 physical core machine. Averaged over 10 runs. The term ``speedup'' here has a different meaning than the usual one: it is the ratio between the time with the standart library and the time with jemalloc.}    
-    \label{tab:jemalloc}
-    \end{center}
-    \end{table}
+\caption{Time to encode a 8GB file of random characters. Standart malloc library vs jemalloc. 32 physical core machine. Averaged over 10 runs. The term ``speedup'' here has a different meaning than the usual one: it is the ratio between the time with the standart library and the time with jemalloc.}    
+\label{tab:jemalloc}
+\end{center}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{./images/small._files.png}
+    \caption{Time for encoding different sized files of random characters, in $ \mu s$, with 32 physical cores. Averaged over 10 runs.}
+    \label{fig:small_files}
+\end{figure}
 
 
 

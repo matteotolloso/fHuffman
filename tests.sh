@@ -6,5 +6,5 @@ N_THREADS=1
 
 
 for i in {2..32..2} ; do
-    time LD_PRELOAD=/home/m.tolloso/libs/lib/libjemalloc.so ./build/huff_ff $IN_FILE ./outputs/test_ff.txt  $i ;
+    time LD_PRELOAD=/home/m.tolloso/libs/lib/libjemalloc.so ./build/huff_thr ./dataset/ ./outputs/test_thr.txt  $i ;
 done

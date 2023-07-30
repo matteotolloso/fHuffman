@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  30 JUL 2023 13:49
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  30 JUL 2023 19:12
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -390,19 +390,25 @@ File: ./images/time_to_complete.png Graphic file (type bmp)
 <./images/time_to_complete.png>
 File: ./images/efficiency.png Graphic file (type bmp)
 <./images/efficiency.png>
- [6] [7] [8]
+ [6] [7]
+File: ./images/small._files.png Graphic file (type bmp)
+<./images/small._files.png>
+ [8]
 No file report.bbl.
-(./report.aux)
+[9] (./report.aux)
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
 Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: 70BD7719AA949FBD3BEAC4D054C14161;1190.
  ) 
 Here is how much of TeX's memory you used:
- 10468 strings out of 478190
- 174076 string characters out of 5854827
- 483162 words of memory out of 5000000
- 30933 multiletter control sequences out of 15000+600000
+ 10477 strings out of 478190
+ 174319 string characters out of 5854827
+ 483300 words of memory out of 5000000
+ 30941 multiletter control sequences out of 15000+600000
  473364 words of font info for 53 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  67i,9n,77p,1218b,348s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on report.pdf (8 pages).
+Output written on report.pdf (9 pages).

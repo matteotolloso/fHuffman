@@ -3,32 +3,27 @@ import numpy as np
 
 # seq_time = 566897566
 
-thr = np.loadtxt('efficiency_thr')
-ff = np.loadtxt('efficiency_ff')
+total = np.loadtxt('small_file.txt')
+print(total.shape)
 
-thr = thr / 1e6
-ff = ff / 1e6
+seq = total[0:11]
+ff = total[11:22]
+thr = total[22:33]
 
 
-# thr = seq_time/thr
-# ff = seq_time/ff
-
-# cores = [i for i in range(4,33,2)]
-
-# thr = thr / cores
-# ff = ff / cores
   
 
-plt.scatter(range(4,33,2),thr, label='thread', marker='o')
-plt.scatter(range(4,33,2),ff, label='FastFlow', marker='v')
+plt.scatter(range(11), seq, label='seqential', marker='x')
+plt.scatter(range(11), ff, label='FastFlow', marker='v')
+plt.scatter(range(11), thr, label='thread', marker='o')
 
-plt.xticks(range(4,33,2))
+plt.xticks(range(11), ['2^10', '2^11', '2^12', '2^13', '2^14', '2^15', '2^16', '2^17', '2^18', '2^19', '2^20'])
 
-plt.xlabel('number of cores'), 
+plt.xlabel('number of characters'), 
 plt.ylabel('time to complete')
 
 plt.legend()
 
-plt.savefig('efficiency.png')
+plt.savefig('small.png')
 
 
