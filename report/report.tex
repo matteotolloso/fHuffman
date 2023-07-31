@@ -135,7 +135,7 @@ In the FastFlow implementation the syncronization is competely managed by the li
 
 \section{Tests \label{sec:tests}}
 
-The table \ref{tab:sequential_times} shows the time of the various stages of the sequential implementation. The great part of the time is spent on the \textit{encoding}, \textit{compressing and writing} phases.
+The table \ref{tab:sequential_times} shows the time of the various stages of the sequential implementation. The great part of the time is spent on the \textit{encoding} and \textit{compressing and writing} phases.
 
 \begin{table}[h]
 \begin{center}
@@ -194,7 +194,7 @@ The table \ref{tab:sequential_times} shows the time of the various stages of the
     \hline
     balancing & 0.000027 s (27 $\mu s$ ) & \\
     \hline
-    compressing and writing & 21.2 s (21213486 $\mu s$)  & 13.86 x & 5.66\\
+    compressing and writing & 21.2 s (21213486 $\mu s$)  & 13.86 x & 0.43\\
     \hline
     \textbf{Total} & 33.3 s (33328868 $\mu s$)  & 17.00 x & 0.53 \\ 
 \end{tabular}
@@ -203,9 +203,13 @@ The table \ref{tab:sequential_times} shows the time of the various stages of the
 \end{center}
 \end{table}
 
-In tables \ref{tab:ff_times} and \ref{tab:thr_times} we can see some measures of the FastFlow implementation and the native threads one. The total do not correspont to the sum of the single stages because they didn't take into account the initialization of the memory and the stuctures needed. The stages measureas refers only to the actual computation while the "total" refers to the time from the start of the program to the end.
+In tables \ref{tab:ff_times} and \ref{tab:thr_times} we can see some measures of the FastFlow implementation and the native threads one. The total do not correspont to the sum of the single stages because they didn't take into account the initialization of the memory and the stuctures needed. The stages measureas refer only to the actual computation while the ``total" refers to the time from the start of the program to the end.
 
-The \textit{read and count} stage has a great speedup, in particular the application API of FastFlow allows an almost linear speedup in this operation and more in general the speedup of the actual computation is always better with FastFlow than with the native threads implementation. If we instead consider the total speedup, threads are slightly better probably due to less overhead in the management. The \textit{compress and write} stage has the worst speedup because it involves writing on disk. The \textit{encoding} phase is independet from the disk and I expected a better speedup. Probably the overhead is caused by the memory reallocation needed to store the encoded characters, ence a competition to access the heap despite the use of the jemalloc library. Even allocate a lot of memory at the beginnig is not a solution because the threads will compete the same. One possible solution could be switch to arena mode immediately but it is ouside my control.
+The \textit{read and count} stage has a great speedup, in particular the application API of FastFlow allows an almost linear speedup in this operation and more in general the speedup of the actual computation is always better with FastFlow than with the native threads implementation. If we instead consider the total speedup, threads are slightly better probably due to less overhead in the management. 
+
+The \textit{compress and write} stage has the worst speedup because it involves writing on disk, so it incorporate a substantial sequeltial fraction. 
+
+The \textit{encoding} phase is independet from the disk and I expected a better speedup. Probably the overhead is caused by the memory reallocations needed to store the encoded characters, ence a competition to access the heap despite the use of the jemalloc library. Even allocate a lot of memory at the beginnig is not a solution because the threads will compete the same. One possible solution could be switch to arena mode immediately but it is ouside my control.
 
 \begin{figure}
     \centering
@@ -226,10 +230,35 @@ In the figure \ref{fig:time_to_complete} the completion time of the two parallel
 
 From the figure \ref{fig:efficiency} we can also observe that the efficiency is greater than one. This can happen when the speedup is greater than the parallel degree because the original problem became much easier when it is divided into subproblems. It might be that allocate and work a single 8 GB block is much slower than allocate 32 different 256 MB blocks, especially with the optimizations made by the jemalloc library and FastFlow. For example could happen that the sequential process allocates the memory on the RAM bank attached to the curren core and then is moved to another core or even anoter socket causing a lot of delay in accessing memory; in the parallel process is more likely that each tread allocate the memorory on the nearest RAM bank and then remains pinned to the same core.
 
-Of course these are only hypothesis difficult to verify, however the test reported in table \ref{tab:jemalloc} shows how important is the use of the jemalloc library for these implementations, expecially with FastFlow, that suffers by an order of magnitude the unoptimized standart library. This could partially explain the superlinear speedup observed before.
+These are only hypothesis difficult to verify, however the test reported in table \ref{tab:jemalloc} shows how important is the use of the jemalloc library for these implementations, expecially with FastFlow, that suffers by an order of magnitude the unoptimized standart library. This could partially explain the superlinear speedup observed before.
 
+This result deservers further investigation, in table \ref{tab:ff_times16} the same test of table \ref{tab:ff_times} is repeated with 16 cores. Results show that the efficiency is surprisingly high since the speedup is almost linear. The $0.9 $ efficiency in \textit{compressing and writing} stage, shows that we are near the bandwidth of the disk and the $1.06$ efficiency in the \textit{encoding} stage is probably due to hypothesis above.
 
 \begin{table}[h]
+    \begin{center}
+    \begin{tabular}{l c c c}
+        \textbf{Stage} & \textbf{Time} & \textbf{Speedup} & \textbf{Efficiency}  \\
+        \hline
+        read and count & 1.6 s (1633635 $\mu s$)  & 15.87 x & 0.99  \\
+        \hline
+        huffman & 0.000095 s (95 $\mu s$) & \\
+        \hline
+        encoding & 12.5 s (12521952 $\mu s$)  & 16.96 x & 1.06 \\
+        \hline
+        balancing & 0.000027 s (27 $\mu s$ ) & \\
+        \hline
+        compressing and writing & 22 s (22056740 $\mu s$)  & 14.04 x & 0.90\\
+        \hline
+        \textbf{Total} & 38.7 s (38714097 $\mu s$)  & 14.64 x & 0.92 \\ 
+\end{tabular} 
+\caption{Parallel times with FastFlow implementation for 8GB file of random characters. 16 physical core machine. Averaged over 10 runs.}    
+\label{tab:ff_times16}
+\end{center}
+\end{table}
+
+
+
+\begin{table}[!h]
     \begin{center}
     \begin{tabular}{c c c c}
         & \textbf{malloc} & \textbf{jemalloc} & speedup\\
@@ -251,7 +280,7 @@ Of course these are only hypothesis difficult to verify, however the test report
     \label{fig:small_files}
 \end{figure}
 
-
+It is useful to know when it is worth to use a parallel implementation instead of a sequential one. Give a precise answer to this question is difficult because the variables involved are many (file size, single core speed, parallel degree, etc.). However, in figure \ref{fig:small_files} we can see the time to encode different sized files fixing the number of workers to 32. We can see that with half a milion characters the parallel implementations are already faster than the sequential one. After the consideration made above about the efficiency, we can imagine that reducing a bit the number of workers reduces the overhead without increasing the completion time, so it would become useful to use parallel implementations even with smaller files.
 
 
 
