@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IN_FILE="./dataset/8mb.txt"
+IN_FILE="./dataset/64mb.txt"
 N_THREADS=32
 
 cd build && make && cd .. &&

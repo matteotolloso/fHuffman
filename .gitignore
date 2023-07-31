@@ -1,3 +1,6 @@
 dataset/*
+!dataset/64mb.txt
+
 build/*
+
 outputs/*

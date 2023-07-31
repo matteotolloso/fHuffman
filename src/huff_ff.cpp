@@ -6,12 +6,17 @@
 #include <map>
 #include <huffman_codes.cpp>
 #include <utils.cpp>
-//#include <argparse/argparse.hpp>
+
 
 #define CODE_POINTS 128
 
 
 int main(int argc, char * argv[]) { 
+
+    if(argc != 4){
+        std::cout << "Usage: " << argv[0] << " <original_filename> <encoded_filename> <nworkers>" << std::endl;
+        return 1;
+    }
 
     utimer tt("total time");
   

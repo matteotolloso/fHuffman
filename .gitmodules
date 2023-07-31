@@ -1,9 +1,3 @@
-[submodule "argparse"]
-	path = argparse
-	url = https://github.com/p-ranav/argparse.git
-[submodule "fastflow"]
-	path = fastflow
-	url = https://github.com/fastflow/fastflow.git
 [submodule "jemalloc"]
 	path = jemalloc
 	url = https://github.com/jemalloc/jemalloc.git

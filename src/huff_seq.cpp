@@ -15,6 +15,12 @@
 
 int main(int argc, char* argv[]){
 
+
+    if(argc != 3){
+        std::cout << "Usage: " << argv[0] << " <original_filename> <encoded_filename>" << std::endl;
+        return 1;
+    }
+
     utimer tt("total time");
 
     std::string original_filename = argv[1];
