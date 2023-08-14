@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wpedantic -Wno-unused -O3")
 add_compile_definitions(DEBUG=${DEBUG})
 
 include_directories(./includes)
-# include_directories(./fastflow)
+include_directories(./fastflow)
 
 
 add_executable(huff_seq ./src/huff_seq.cpp)

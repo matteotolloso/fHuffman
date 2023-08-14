@@ -3,21 +3,30 @@ import numpy as np
 
 # seq_time = 566897566
 
-total = np.loadtxt('small_file.txt')
+total = np.loadtxt('speedups.txt')
 print(total.shape)
 
-seq = total[0:11]
-ff = total[11:22]
-thr = total[22:33]
+seq = total[0:9]
+ff = total[9:19]
+thr = total[19:28]
 
 
   
 
-plt.scatter(range(11), seq, label='seqential', marker='x')
-plt.scatter(range(11), ff, label='FastFlow', marker='v')
-plt.scatter(range(11), thr, label='thread', marker='o')
+plt.scatter(range(9), seq, label='seqential', marker='x')
+plt.scatter(range(9), ff, label='FastFlow', marker='v')
+plt.scatter(range(9), thr, label='thread', marker='o')
 
-plt.xticks(range(11), ['2^10', '2^11', '2^12', '2^13', '2^14', '2^15', '2^16', '2^17', '2^18', '2^19', '2^20'])
+plt.xticks(range(9), ['2^25', 
+                       '2^26',
+                       '2^27',
+                       '2^28',
+                       '2^29',
+                       '2^30',
+                       '2^31',
+                       '2^32',
+                       '2^33',
+                       ])
 
 plt.xlabel('number of characters'), 
 plt.ylabel('time to complete')
