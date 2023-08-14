@@ -1,5 +1,5 @@
 dataset/*
-!dataset/64mb.txt
+!dataset/2_25.txt
 
 build/*
 
