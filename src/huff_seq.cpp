@@ -109,5 +109,11 @@ int main(int argc, char* argv[]){
 
     }
 
+    // ********** CLEAN UP **********
+
+    delete encoded_contents;
+    delete[] counts;
+    clean_up(decoder);
+
     return 0;
 }

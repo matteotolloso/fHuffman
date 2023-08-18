@@ -199,6 +199,23 @@ int main(int argc, char * argv[]) {
     mmap_file_sync(mapped_output_file, encoded_compressed_size);
 
     } 
+
+
+    // ********** CLEAN UP **********
+
+    clean_up(decoder);
+
+    for (int i=0; i<nworkers; i++){
+        delete[] counts[i];
+        delete std::get<1>(*encoded_chunks[i]);
+        delete encoded_chunks[i];
+    }
+
+    delete[] counts;
+  
+
+
+    
     
 
     return 0;

@@ -250,5 +250,20 @@ int main(int argc, char * argv[]){
         workers[i].join();
     }
 
+
+    // ********** CLEAN UP **********
+
+    clean_up(decoder);
+
+    for (int i=0; i<nworkers; i++){
+        delete[] counts[i];
+        delete std::get<1>(*encoded_chunks[i]);
+        delete encoded_chunks[i];
+        delete reduce_counts[i];
+    }
+
+    delete[] counts;
+  
+
 }
 

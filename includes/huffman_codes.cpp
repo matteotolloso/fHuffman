@@ -86,6 +86,16 @@ void decode(MinHeapNode* root, string s, long long unsigned &index, string &deco
         decode(root->rChild, s, index, decoded);
 }
 
+void clean_up(MinHeapNode* & root){
+    if (root == NULL)
+        return;
+
+    clean_up(root->lChild);
+    clean_up(root->rChild);
+
+    delete root;
+}
+
 
 #endif
 
