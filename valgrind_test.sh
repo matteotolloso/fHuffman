@@ -15,5 +15,5 @@ valgrind -s --leak-check=full --track-origins=yes ./build/huff_ff $IN_FILE ./out
 echo -e "-----------------------------------\n" &&
 
 echo -e "\nTest sequential\n" &&
-valgrind -s --leak-check=full --track-origins=yes ./build/huff_seq $IN_FILE ./outputs/test_seq.txt  $N_THREADS &&
+valgrind -s --leak-check=full --track-origins=yes ./build/huff_seq $IN_FILE ./outputs/test_seq.txt  &&
 echo -e "-----------------------------------\n" 
