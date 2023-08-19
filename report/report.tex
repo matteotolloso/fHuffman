@@ -95,7 +95,7 @@ has a different lenght), so the actual writing needs a step of syncronization. I
 \begin{enumerate}
     \item \textit{encoding}: each worker encodes a chunk of the file.
     \item \textit{balancing}: the encoded chunks sizes are made multiple of 8 and the the index where the writing should start is computed. This is a sequential syncronization step but the time needed is negligible.
-    \item \textit{compressing and writing}: each worker takes a chunk of the encoded file and writes it on the disk groping the bits in bytes.
+    \item \textit{compressing and writing}: each worker takes a chunk of the encoded file and writes it on the disk grouping the bits in bytes.
 \end{enumerate}
 It's fundamental to notice that the \textit{balancing} step makes the encoded chunks independent one from another, so the \textit{compressing and writing} can became a parallel operation.
 
@@ -108,9 +108,11 @@ The FastFlow implementation realy on the application API \texttt{ParallelForRedu
 
 In the thread implementation $nw$ threads are spawned and a shared queue is used to send them the functions to compute. Each thread calculates its part of the work and after the computation they wait on an explicit barrier. When all the threads have finished the barrier is opened and the next step is executed. The termination is managed with the \texttt{optional} type.
 
-The sequential implementation is easy, the file is mapped in memory, the characters are iterated one by one while counting the characters and after the creation of the code the file is encoded and written.
+The sequential implementation is easy, the characters are iterated one by one while counting the occurences and after the creation of the code the file is encoded and written.
 
-In the parallel implementations there are $nw$ count vectors, each one is allocated by each differnet worker. In the reduce part each worker creates a \texttt{map} data structure that are then joined together with a sequential operation. FastFlow automatically manages the allocations in this phase with the \texttt{ParallelForReduce} class. In the encoded phase each worker allocates a tuple containing a \texttt{deque} data structure and a \texttt{int}. The \texttt{deque} is used to store the encoded bits and the \texttt{int} will be used in the balancing stage to store the byte to start writing in the encoded file. The balacing does precisely this: moves bits between the \texttt{deque}s in order to make them multiple of 8 (padding the last one) and computes the starting byte. This operation takes only few usec thanks to the \texttt{deque} data structure. After this stage of \textit{balancing} we end up with $nw$ \texttt{deque} muliple of 8 and for each one we know where it has to be write in the file. The last stage, \textit{compressing and writing}, can now start in parallel. Each worker takes a \texttt{deque} and writes it on the file grouping the bits in bytes.
+In all three cases the file is mapped in memory and read as a an array of characters. Likewise, the encoded file is mapped in the main memory and written. At the end you make sure that it is synchronized with the disk.
+
+In the parallel implementations there are $nw$ count vectors, each one is allocated by each differnet worker. In the reduce part each worker creates a \texttt{map} data structure that are then joined together with a sequential operation. FastFlow automatically manages the allocations in this phase with the \texttt{ParallelForReduce} class. In the \textit{encode} phase each worker allocates a tuple containing a \texttt{deque} data structure and a \texttt{int}. The \texttt{deque} is used to store the encoded bits and the \texttt{int} will be used in the balancing stage to store the byte to start writing in the encoded file. The balacing does precisely this: moves bits between the \texttt{deque}s in order to make them multiple of 8 (padding the last one) and computes the starting byte. This operation takes only few usec thanks to the \texttt{deque} data structure. After this stage of \textit{balancing} we end up with $nw$ \texttt{deque} muliple of 8 and for each one we know where it has to be write in the file. The last stage, \textit{compressing and writing}, can now start in parallel. Each worker takes a \texttt{deque} and writes it on the file grouping the bits in bytes.
 
 
 
@@ -123,7 +125,7 @@ The false sharing problem is avoided sice each worker writes on a competely diff
 The access to the heap is mutual exclusive, so an high number of allocation reallocation can cause a big overhead. The use of the jemalloc library helps a lot in this case. Details are discussed in section \ref{sec:tests}.
 
 \paragraph*{Load balancing}
-The parellel implementations use a static scheduling. During the counting operation the file is equally diveded between the workers i.e. each workers counts the same number of characters. In the reduce phase each worker takes an equal subset of characters and sums the occurences. In both phases could happen that a worker have to deal with bigger number with respect to othes (because of different character frequency), but there are only \textit{+1} operations and the time should not depend on the size of the number. In the \textit{encoding} phase each worker takes a chunk to encode. This part can be really unbalanced if the orginal file has somewhere a lot of alligned equal character, infact, this character will probability have a short code and the worker that encodes that chunk has to do fewer memory reallocations.
+The parellel implementations use a static scheduling. During the \textit{counting} operation the file is equally diveded between the workers i.e. each workers counts the same number of characters. In the \textit{reduce} phase each worker takes an equal subset of characters and sums the occurences. In both phases could happen that a worker have to deal with bigger number with respect to othes (because of different character frequency), but there are only \textit{+1} operations and the time should not depend on the size of the number. In the \textit{encoding} phase each worker takes a chunk to encode. This part can be really unbalanced if the orginal file has somewhere a lot of alligned equal character, infact, this character will probability have a short code and the worker that encodes that chunk has to do fewer memory reallocations.
 
 These observations could prompt us to use dynamic scheduling. The FastFlow implemenation easly allow us to do that changing only one parameter, however some modifications have to be done in the data structures that collect the results and in general the sequential fraction of the program increases due to the operations to putting data back in order. For a fair comparison I decided to use static scheduling in both implementations.
 
@@ -203,7 +205,7 @@ The table \ref{tab:sequential_times} shows the time of the various stages of the
 \end{center}
 \end{table}
 
-In tables \ref{tab:ff_times} and \ref{tab:thr_times} we can see some measures of the FastFlow implementation and the native threads one. The total do not correspont to the sum of the single stages because they didn't take into account the initialization of the memory and the stuctures needed. The stages measureas refer only to the actual computation while the ``total" refers to the time from the start of the program to the end.
+In tables \ref{tab:ff_times} and \ref{tab:thr_times} we can see some measures of the FastFlow implementation and the native threads one. The total do not exactly correspont to the sum of the single stages because they didn't take into account the initialization of the memory and other structures. The measureas of the single stages refer only to the actual computation while the ``total" refers to the time from the start of the program to the end.
 
 The \textit{read and count} stage has a great speedup, in particular the application API of FastFlow allows an almost linear speedup in this operation and more in general the speedup of the actual computation is always better with FastFlow than with the native threads implementation. If we instead consider the total speedup, threads are slightly better probably due to less overhead in the management. 
 
@@ -218,7 +220,7 @@ The \textit{encoding} phase is independet from the disk and I expected a better 
     \label{fig:time_to_complete}
 \end{figure}
 
-In the figure \ref{fig:time_to_complete} the completion time of the two parallel implementation is compared. The FastFlow result is quite surprising because it achieves the minimum time with only 16 threads, and starts to worsen the performance increasing the parallel degree. A similar behaviour can be observed with the native thread, wehere is not worth to increase the number of threads over 28. The same results can be seen under a differen prospective in the efficiency plot, figure \ref{fig:efficiency}. I suspect that the great efficiency of FastFlow with 16 cores is correlated with the architecture of the machine used for the experiments.
+In the figure \ref{fig:time_to_complete} the completion time of the two parallel implementation is compared. The FastFlow result is quite surprising because it achieves the minimum time with only 16 threads, and starts to worsen the performance increasing the parallel degree. A similar behaviour can be observed with the native thread, wehere is not worth to increase the number of threads over 28. The same results can be seen under a differen prospective in the efficiency plot, figure \ref{fig:efficiency}. I suspect that the great efficiency of FastFlow with 16 cores is correlated with the architecture of the machine used for the experiments ($2 \times 16 $ cores) and some optimizations made by FastFlow and not present with the native threads implemenation (for example thread pinning).
 
 
 \begin{figure}
@@ -228,11 +230,11 @@ In the figure \ref{fig:time_to_complete} the completion time of the two parallel
     \label{fig:efficiency}
 \end{figure}
 
-From the figure \ref{fig:efficiency} we can also observe that the efficiency is greater than one. This can happen when the speedup is greater than the parallel degree because the original problem became much easier when it is divided into subproblems. It might be that allocate and work a single 8 GB block is much slower than allocate 32 different 256 MB blocks, especially with the optimizations made by the jemalloc library and FastFlow. For example could happen that the sequential process allocates the memory on the RAM bank attached to the curren core and then is moved to another core or even anoter socket causing a lot of delay in accessing memory; in the parallel process is more likely that each tread allocate the memorory on the nearest RAM bank and then remains pinned to the same core.
+From the figure \ref{fig:efficiency} we can also observe that the efficiency is greater than one. This can happen when the speedup is greater than the parallel degree because the original problem became much easier when it is divided into subproblems. It might be that allocate and work a single 8 GB block is much slower than allocate 32 different 256 MB blocks, especially with the optimizations made by the jemalloc library and FastFlow. For example could happen that the sequential process allocates the memory on the RAM bank attached to the curren core and then is moved to another core or even anoter socket causing a lot of delay in accessing memory; in the parallel process is more likely that each tread allocate the memorory on the nearest RAM bank and then remains pinned to the same core, thanks to systems like the ``thread pinning'', that is present in FastFlow.
 
 These are only hypothesis difficult to verify, however the test reported in table \ref{tab:jemalloc} shows how important is the use of the jemalloc library for these implementations, expecially with FastFlow, that suffers by an order of magnitude the unoptimized standart library. This could partially explain the superlinear speedup observed before.
 
-This result deservers further investigation, in table \ref{tab:ff_times16} the same test of table \ref{tab:ff_times} is repeated with 16 cores. Results show that the efficiency is surprisingly high since the speedup is almost linear. The $0.9 $ efficiency in \textit{compressing and writing} stage, shows that we are near the bandwidth of the disk and the $1.06$ efficiency in the \textit{encoding} stage is probably due to hypothesis above.
+In table \ref{tab:ff_times16} the same test of table \ref{tab:ff_times} is repeated with 16 cores to confirm that the best efficiency with FastFlow is obtained with $16$ threads. Results show that the efficiency is surprisingly high since the speedup is almost linear. The $0.9 $ efficiency in \textit{compressing and writing} stage shows that we are near the bandwidth of the disk and the $1.06$ efficiency in the \textit{encoding} stage is probably due to hypothesis above.
 
 \begin{table}[!h]
     \begin{center}
@@ -283,11 +285,19 @@ This result deservers further investigation, in table \ref{tab:ff_times16} the s
 It is useful to know when it is worth to use a parallel implementation instead of a sequential one. Give a precise answer to this question is difficult because the variables involved are many (file size, single core speed, parallel degree, etc.). However, in figure \ref{fig:small_files} we can see the time to encode different sized files fixing the number of workers to 32. We can see that with half a milion characters the parallel implementations are already faster than the sequential one. After the consideration made above about the efficiency, we can imagine that reducing a bit the number of workers reduces the overhead without increasing the completion time, so it would become useful to use parallel implementations even with smaller files.
 
 
+\FloatBarrier
+\section{Conclusions}
+The tests showed that predict the behaviour of a parallel application is really difficult, as well as write a flexible software capable to adapt to the underlaying architecture that could strongly influence the performance. 
+
+FastFlow has a lot of options and optimizations and the code results more compact. However, for the same reason it is more difficult to predict the behaviour of the application and to tune the parameters, in general the tests showed a really good performance.
+
+The native threads implementation code is longer and built around this use case. Implement more complex policy and optimizations would be very difficult and error-prone. The advantage is the almost absent runtime overhead that brings to a slightly better completion time.
 
 
-\newpage \FloatBarrier
-\bibliographystyle{plain}
-\bibliography{bibliography}
+
+
+% \bibliographystyle{plain}
+% \bibliography{bibliography}
 
 
 \end{document}

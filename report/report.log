@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  14 AUG 2023 14:09
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2023.7.18)  19 AUG 2023 17:46
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -388,30 +388,26 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 [5]
 File: ./images/time_to_complete.png Graphic file (type bmp)
 <./images/time_to_complete.png>
+ [6]
 File: ./images/efficiency.png Graphic file (type bmp)
 <./images/efficiency.png>
- [6]
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
+ [7]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 File: ./images/small._files.png Graphic file (type bmp)
 <./images/small._files.png>
-[7] [8] [9]
-No file report.bbl.
-(./report.aux)
+[8] [9] [10] (./report.aux)
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 70BD7719AA949FBD3BEAC4D054C14161;1190.
+(rerunfilecheck)             Checksum: FC3B00A9320EEC4DFC713D59F654CD86;1289.
  ) 
 Here is how much of TeX's memory you used:
- 10478 strings out of 478190
- 174335 string characters out of 5854827
- 481482 words of memory out of 5000000
- 30942 multiletter control sequences out of 15000+600000
+ 10475 strings out of 478190
+ 174299 string characters out of 5854827
+ 481604 words of memory out of 5000000
+ 30940 multiletter control sequences out of 15000+600000
  473364 words of font info for 53 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 67i,9n,77p,1218b,349s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 67i,9n,77p,1226b,348s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on report.pdf (9 pages).
+Output written on report.pdf (10 pages).

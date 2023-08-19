@@ -5,7 +5,7 @@ N_THREADS=32
 JMALLOC_PATH="/home/m.tolloso/libs/lib/libjemalloc.so"
 
 
-cd build && make && cd .. &&
+cd build && cmake .. && make && cd .. &&
 
 echo -e "\nTest with native threads\n" &&
 time  LD_PRELOAD=$JMALLOC_PATH ./build/huff_thr $IN_FILE ./outputs/test_thr.txt  $N_THREADS &&

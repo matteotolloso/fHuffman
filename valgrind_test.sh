@@ -3,7 +3,7 @@ IN_FILE="./dataset/2_25.txt"
 N_THREADS=32
 
 
-cd build && make && cd .. &&
+cd build && cmake .. && make && cd .. &&
 
 
 echo -e "\nTest with native threads\n" &&
