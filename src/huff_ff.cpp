@@ -65,7 +65,7 @@ int main(int argc, char * argv[]) {
         // for cache efficiency
         for (int j = 0; j < nworkers; j++){  // iterate all the partial computations (mapper threads)
             for (long long unsigned i = start_index; i < stop_index; i++){   // assigned char chunk
-                reduce_counts[i] += counts[j][i]; // only this thread is wrinting on reduce counts becouse is local
+                reduce_counts[i] += counts[j][i]; // only this thread is wrinting on reduce counts because is local
             }    
         } 
     };

@@ -8,9 +8,7 @@
 \PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
 \usepackage{hyperref}
 \usepackage{verbatim}
-% Square around link (to decide)
 \hypersetup{hidelinks}
-% Square around link (to decide)
 \usepackage{color}
 \usepackage{tabularx}
 \usepackage{threeparttable}
@@ -77,7 +75,7 @@ If we instead consider the reading of the disk as a datata parallel operation th
 
 
 Furthermore, the tests that i did mapping the file in main memory and reading it with multiple threads, showed that the parallelization
-also improves the performance of the read operation. This is probably due to how the SSD works and the caching syestems. 
+also improves the performance of the read operation. This is probably due to how the SSD works and the caching systems. 
 
 \paragraph*{Reduce}
 After the \textit{Map} operiation we end up with a number of counts vectors equal to the number of chunks the file was divided into (that in our case is equal to the number of workers). The \textit{Reduce} operation is again a parallel one, this time each reducer takes a subset of the alphabet and sums the occurences of each character in that subset. It's useless to have a number of workers greater than the number of different characters in the file.
@@ -97,14 +95,14 @@ has a different lenght), so the actual writing needs a step of syncronization. I
     \item \textit{balancing}: the encoded chunks sizes are made multiple of 8 and the the index where the writing should start is computed. This is a sequential syncronization step but the time needed is negligible.
     \item \textit{compressing and writing}: each worker takes a chunk of the encoded file and writes it on the disk grouping the bits in bytes.
 \end{enumerate}
-It's fundamental to notice that the \textit{balancing} step makes the encoded chunks independent one from another, so the \textit{compressing and writing} can became a parallel operation.
+It's fundamental to notice that the \textit{balancing} step makes the encoded chunks independent one from another, so the \textit{compressing and writing} can be a parallel operation.
 
 
 \section{Technical details}
 
 \subsection{Implementation}
 
-The FastFlow implementation realy on the application API \texttt{ParallelForReduce} that manages the work for each thread and the syncronizations.
+The FastFlow implementation relay on the application API \texttt{ParallelForReduce} that manages the work for each thread and the syncronizations.
 
 In the thread implementation $nw$ threads are spawned and a shared queue is used to send them the functions to compute. Each thread calculates its part of the work and after the computation they wait on an explicit barrier. When all the threads have finished the barrier is opened and the next step is executed. The termination is managed with the \texttt{optional} type.
 
@@ -130,7 +128,7 @@ The parellel implementations use a static scheduling. During the \textit{countin
 These observations could prompt us to use dynamic scheduling. The FastFlow implemenation easly allow us to do that changing only one parameter, however some modifications have to be done in the data structures that collect the results and in general the sequential fraction of the program increases due to the operations to putting data back in order. For a fair comparison I decided to use static scheduling in both implementations.
 
 \paragraph*{Synchronization}
-In the FastFlow implementation the syncronization is competely managed by the library. One set of threads is spown at the beginning and the runtime support manages the queues and the implicit barriers. In the native threads implementation I had to manually managed the syncronization. The easiest way would have been to spown and join a set of threads for each stage, each time with the assigned funcion and arguments. This approach would have been really simple but it would have caused a lot of overheads since from some tests on the reference machine, the creation and join of a thread takes about $70 \mu s$, while the insertion of a task in a shaerd queue takes about $1 \mu s$ (and the creation of the shared queue takes $4 \mu s$). So the the latter is the method used.
+In the FastFlow implementation the syncronization is competely managed by the library. One set of threads is spown at the beginning and the runtime support manages the queues and the implicit barriers. In the native threads implementation I had to manually managed the syncronization. The easiest way would have been to spown and join a set of threads for each stage, each time with the assigned funcion and arguments. This approach would have been really simple but it would have caused a lot of overheads since from some tests on the reference machine the creation and join of a thread takes about $70 \mu s$, while the insertion of a task in a shaerd queue takes about $1 \mu s$ (and the creation of the shared queue takes $4 \mu s$). So the the latter is the method I used.
 
 
 
@@ -209,7 +207,7 @@ In tables \ref{tab:ff_times} and \ref{tab:thr_times} we can see some measures of
 
 The \textit{read and count} stage has a great speedup, in particular the application API of FastFlow allows an almost linear speedup in this operation and more in general the speedup of the actual computation is always better with FastFlow than with the native threads implementation. If we instead consider the total speedup, threads are slightly better probably due to less overhead in the management. 
 
-The \textit{compress and write} stage has the worst speedup because it involves writing on disk, so it incorporate a substantial sequeltial fraction. 
+The \textit{compress and write} stage has the worst speedup because it involves writing on disk, so it incorporate a substantial sequential fraction. 
 
 The \textit{encoding} phase is independet from the disk and I expected a better speedup. Probably the overhead is caused by the memory reallocations needed to store the encoded characters, ence a competition to access the heap despite the use of the jemalloc library. Even allocate a lot of memory at the beginnig is not a solution because the threads will compete the same. One possible solution could be switch to arena mode immediately but it is ouside my control.
 
@@ -277,7 +275,7 @@ In table \ref{tab:ff_times16} the same test of table \ref{tab:ff_times} is repea
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.7\textwidth]{./images/small._files.png}
+    \includegraphics[width=0.6\textwidth]{./images/small._files.png}
     \caption{Time for encoding different sized files of random characters, in $ \mu s$, with 32 physical cores. Averaged over 10 runs.}
     \label{fig:small_files}
 \end{figure}
@@ -289,7 +287,7 @@ It is useful to know when it is worth to use a parallel implementation instead o
 \section{Conclusions}
 The tests showed that predict the behaviour of a parallel application is really difficult, as well as write a flexible software capable to adapt to the underlaying architecture that could strongly influence the performance. 
 
-FastFlow has a lot of options and optimizations and the code results more compact. However, for the same reason it is more difficult to predict the behaviour of the application and to tune the parameters, in general the tests showed a really good performance.
+FastFlow has a lot of options and optimizations and the code results more compact. However, for the same reason it is more difficult to predict the behaviour of the application and to tune the parameters; in general the tests showed a really good performance.
 
 The native threads implementation code is longer and built around this use case. Implement more complex policy and optimizations would be very difficult and error-prone. The advantage is the almost absent runtime overhead that brings to a slightly better completion time.
 

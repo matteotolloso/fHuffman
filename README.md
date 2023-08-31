@@ -3,7 +3,7 @@
 
 ## How to run
 
-`FastFlow` must be installed on the machine in the default `g++` include path, otherwise you have to specify the path in the `CmakeLists.txt` file with the `include_directories()` command.
+`FastFlow` must be installed on the machine in the default `g++` include path, otherwise you have to specify the path in the `CmakeLists.txt` file with the `include_directories()` command. If you are not on the default machine, you have to run the `mapping_string.sh` script locatend in `FastFlow` library.  
 
 ### General test
 
