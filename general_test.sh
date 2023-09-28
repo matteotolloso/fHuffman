@@ -1,7 +1,6 @@
 #!/bin/bash
-
-IN_FILE="./dataset/2_25.txt"
-N_THREADS=32
+IN_FILE="./dataset/2_27.txt"
+N_THREADS=16
 JMALLOC_PATH="/home/m.tolloso/libs/lib/libjemalloc.so"
 
 
